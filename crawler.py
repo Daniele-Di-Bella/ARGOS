@@ -1,6 +1,13 @@
 import asyncio
+import re
 
 from crawlee.playwright_crawler import PlaywrightCrawler, PlaywrightCrawlingContext
+
+
+def clean_text(input_text):
+    text_without_html = re.sub(r'<[^>]+>', '', input_text)  # HTML tag removal
+    cleaned_text = re.sub(r'\s+', ' ', text_without_html)  # line break removal
+    return cleaned_text.strip()
 
 
 async def main() -> None:
