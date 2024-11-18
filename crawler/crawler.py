@@ -4,12 +4,15 @@ import re
 
 from datetime import datetime
 from crawlee.beautifulsoup_crawler import BeautifulSoupCrawler, BeautifulSoupCrawlingContext
+from crawlee import ConcurrencySettings
 
 
 def create_dataset() -> None:
     today = datetime.now().strftime("%Y-%m-%d_%H.%M")
-    with open(rf"C:\Users\danie\PycharmProjects\WikiSpark\crawler\Dataset_{today}.csv", mode="w", newline="") as file:
+    data_path = rf"C:\Users\danie\PycharmProjects\WikiSpark\crawler\Dataset_{today}.csv"
+    with open(data_path, mode="w", newline="") as file:
         csv.writer(file).writerows([["Link", "Abstract"]])
+    return data_path
 
 
 def clean_text(input_text):
@@ -18,32 +21,48 @@ def clean_text(input_text):
     return cleaned_text.strip()
 
 
-async def beautifulsoup_crawler() -> None:
-    crawler = BeautifulSoupCrawler()
+async def beautifulsoup_crawler(data_path: str, protein: str) -> None:
+    concurrency_settings = ConcurrencySettings(
+        min_concurrency=1,
+        max_concurrency=10,
+        desired_concurrency=5
+    )
 
-    # Define the default request handler, which will be called for every request.
+    # Create the crawler with concurrency settings
+    crawler = BeautifulSoupCrawler(concurrency_settings=concurrency_settings)
+
+    # This decorator defines the default request handler
     @crawler.router.default_handler
     async def request_handler(context: BeautifulSoupCrawlingContext) -> None:
-        context.log.info(f'Processing {context.request.url} ...')
+        h2_tag = context.soup.find("h2", string="Abstract")
+        if not h2_tag:
+            pass
+        else:
+            abstract_tag = h2_tag.find_next()
+            if abstract_tag:
+                # Extract abstract text
+                raw_text = abstract_tag.get_text(strip=True)
+                abstract_text = clean_text(raw_text)
+                # Extract data from the page.
+                data = {
+                    'url': context.request.url,
+                    'abstract': abstract_text
+                }
+                print(f"Abstract found in {context.request.url}: {abstract_text}")
 
-        # Extract data from the page.
-        data = {
-            'url': context.request.url,
-            'title': context.soup.title.string if context.soup.title else None,
-            'h1s': [h1.text for h1 in context.soup.find_all('h1')],
-            'h2s': [h2.text for h2 in context.soup.find_all('h2')],
-            'h3s': [h3.text for h3 in context.soup.find_all('h3')],
-        }
+                with open(data_path, mode='a', newline='', encoding="utf-8") as file:
+                    writer = csv.writer(file)
+                    writer.writerow([data['url'], data['abstract']])
 
-        # Push the extracted data to the default dataset.
-        await context.push_data(data)
-
-        # Enqueue all links found on the page.
+        # Enqueue all links found on the page
         await context.enqueue_links()
 
-    await crawler.run(['https://crawlee.dev/'])
+    await crawler.run([f"https://scholar.google.com/scholar?hl=it&as_sdt=0%2C5&q={protein}&btnG="])
 
 
 if __name__ == '__main__':
-    asyncio.run(create_dataset())
-    # asyncio.run(beautifulsoup_crawler())
+    try:
+        data_path = create_dataset()
+        asyncio.run(beautifulsoup_crawler(data_path, "otogelin"))
+    except KeyboardInterrupt:
+        print("Crawler interrupted by user")
