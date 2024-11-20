@@ -1,2 +1,6 @@
 .idea/
 .pytest_cache/
+crawler/storage
+**/__pycache__/
+*.pyc
+crawler/trash_code.py
