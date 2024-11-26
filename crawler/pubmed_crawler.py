@@ -1,16 +1,23 @@
 import requests
 import time
+import csv
+
+# webbrowser is needed for debugging. Do not optimize imports.
+import webbrowser
+
 from xml.etree import ElementTree
+from datetime import datetime
 
 BASE_URL = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/"
 
 
 # Search papers on PubMed
-def search_pubmed(protein, max_results=10000):
+def search_pubmed(protein, max_results=10000, restart=0):
     params = {
         'db': 'pubmed',
         'term': protein,
         'retmax': max_results,
+        "restart": restart,
         'retmode': 'xml'
     }
     response = requests.get(BASE_URL + "esearch.fcgi", params=params)
@@ -23,7 +30,7 @@ def search_pubmed(protein, max_results=10000):
 
 
 # Abstract extraction with PubMed ID
-def fetch_abstract(pmid):
+def fetch_paper(pmid):
     params = {
         'db': 'pubmed',
         'id': pmid,
@@ -50,19 +57,28 @@ def parse_search_results(xml_data):
 def parse_abstract(xml_data):
     root = ElementTree.fromstring(xml_data)
     paragraphs = root.findall(".//PubmedArticle/MedlineCitation/Article/Abstract/AbstractText")
-    return " ".join([para.text for para in paragraphs if para.text]) or None
+    original_text = " ".join([para.text for para in paragraphs if para.text])
+
+    # Substitution of all NBSP characters with normal spaces
+    cleaned_text = original_text.replace("\u00A0", " ")  # '\u00A0' is the Unicode code for NBSP
+
+    return cleaned_text or None
 
 
 # Main function to perform search and collect abstracts
-def main():
-    term = "tanc2"  # Search term, for us, the name of a Tdark protein
+def main(term: str):  # Search term, for us, the name of a Tdark protein
     retmax = 10000  # Max results per request (PubMed max)
-    retstart = 0  # Starting point for iterative search
+    restart = 0  # Starting point for iterative search
     all_pmids = []
+    now = datetime.now().strftime("%Y-%m-%d_%H.%M")
+    output_file = f"{term}_pubmed_abstracts_{now}.csv"
+    with open(output_file, mode='w', newline='', encoding='utf-8') as file:
+        writer = csv.writer(file)
+        writer.writerow(["Link", "Abstract"])
 
     while True:
-        print(f"Fetching results starting from {retstart}...")
-        search_results = search_pubmed(term, max_results=retmax)
+        print(f"Fetching results starting from {restart}...")
+        search_results = search_pubmed(term, max_results=retmax, restart=restart)
         if search_results:
             pmids, total_results = parse_search_results(search_results)
             all_pmids.extend(pmids)
@@ -70,7 +86,7 @@ def main():
             if len(all_pmids) >= total_results:
                 print(f"Retrieved all {total_results} results.")
                 break
-            retstart += retmax
+            restart += retmax
         else:
             break
 
@@ -81,17 +97,20 @@ def main():
     # Now collect abstracts for each PMID
     for pmid in all_pmids:
         print(f"Fetching abstract for PMID: {pmid}")
-        abstract_data = fetch_abstract(pmid)
+        abstract_data = fetch_paper(pmid)
         if abstract_data:
             abstract = parse_abstract(abstract_data)
             if abstract:
-                print(f"Abstract for {pmid}: {abstract}")
+                link = f"https://pubmed.ncbi.nlm.nih.gov/{pmid}/"
+                with open(output_file, mode='a', newline='', encoding='utf-8') as file:
+                    writer = csv.writer(file)
+                    writer.writerow([link, abstract])
             else:
                 print(f"No abstract found for PMID {pmid}")
-            print("-" * 80)
+                # webbrowser.open(f"https://pubmed.ncbi.nlm.nih.gov/{pmid}/")
 
         time.sleep(1 / 3)  # Pause between requests
 
 
 if __name__ == "__main__":
-    main()
+    main("tanc2")
