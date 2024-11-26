@@ -3,4 +3,4 @@
 crawler/storage
 **/__pycache__/
 *.pyc
-crawler/trash_code.py
+*pubmed_abstracts*
