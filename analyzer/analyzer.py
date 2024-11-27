@@ -1,5 +1,7 @@
 from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.metrics.pairwise import cosine_similarity
 import pandas as pd
+import seaborn as sns
 import matplotlib.pyplot as plt
 
 # Create the TF-IDF vectorizer
@@ -11,21 +13,28 @@ df = pd.read_csv(file_path)
 corpus = df['Abstract']
 M = vectorizer.fit_transform(corpus)
 
-words = vectorizer.get_feature_names_out()
+# Cosine similarity computation
+similarity_matrix = cosine_similarity(M)
+# print(similarity_matrix)
 
-# Convert the TF-IDF matrix to a Pandas DataFrame for better handling
-tfidf_matrix = pd.DataFrame(M.toarray(), columns=words)
+# # Convert the TF-IDF matrix to a Pandas DataFrame for better handling
+# words = vectorizer.get_feature_names_out()
+# tfidf_matrix = pd.DataFrame(M.toarray(), columns=words)
+#
+# # Extract the column of interest from he TF-IDF matrix and add it to the dataframe
+# df["tfidf_tanc2"] = tfidf_matrix["tanc2"]
+# # print(df["tfidf_tanc2"])
+# df.to_csv(file_path, index=True)
 
-# Extract the column of interest from he TF-IDF matrix and add it to the dataframe
-df["tfidf_tanc2"] = tfidf_matrix["tanc2"]
-# print(df["tfidf_tanc2"])
-df.to_csv(file_path, index=True)
+plt.figure(figsize=(10, 8))
+sns.heatmap(similarity_matrix, annot=False, cmap='viridis', cbar=True, square=True,
+            xticklabels=corpus.index, yticklabels=corpus.index)
 
-# Small graphical representation
-plt.figure()
-df["tfidf_tanc2"].plot(kind='bar', color='lightblue', alpha=0.7)
-plt.title('tanc2_TF-IDF')
-plt.xlabel('Paper index')
-plt.ylabel('TF-IDF')
+plt.title("Cosine Similarity Matrix")
+plt.xlabel("Abstract Index")
+plt.ylabel("Abstract Index")
+
+plt.xticks(rotation=90)
+plt.yticks(rotation=0)
+
 plt.show()
-
