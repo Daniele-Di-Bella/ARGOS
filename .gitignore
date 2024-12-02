@@ -1,6 +1,6 @@
 .idea/
 .pytest_cache/
-crawler/storage
+data-collection/storage
 **/__pycache__/
 *.pyc
 *pubmed_abstracts*
