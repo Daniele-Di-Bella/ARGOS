@@ -8,8 +8,8 @@ import matplotlib.pyplot as plt
 vectorizer = TfidfVectorizer(stop_words='english')  # Stop words are ignored
 
 # Vectorize the corpus
-dataframe_path = file_path = r'C:\Users\danie\PycharmProjects\WikiSpark\analyzer\tanc2_pubmed_abstracts_2024-11-26_19.37.csv'
-df = pd.read_csv(file_path)
+dataframe_path = r'C:\Users\danie\PycharmProjects\WikiSpark\analyzer\tanc2_pubmed_abstracts_2024-11-26_19.37.csv'
+df = pd.read_csv(dataframe_path)
 corpus = df['Abstract']
 M = vectorizer.fit_transform(corpus)
 

@@ -1,6 +1,7 @@
-matplotlib==3.9.2
+crawler==0.0.2
+matplotlib==3.9.3
+openai==1.56.0
 pandas==2.2.3
 Requests==2.32.3
 scikit_learn==1.5.2
-seaborn~=0.13.2
-scikit-learn~=1.5.2
+seaborn==0.13.2
