@@ -41,7 +41,7 @@ def fetch_paper(pmid):
     # Basic error handling
     if response.status_code == 200:
         return response.text
-    print(f"Error while fetching abstract: {response.status_code}")
+    print(f"Error while fetching paper: {response.status_code}")
     return None
 
 
@@ -54,25 +54,36 @@ def parse_search_results(xml_data):
 
 
 # Parse abstracts and return them
-def parse_abstract(xml_data):
+def parse_result(xml_data, abstract=True):
     root = ElementTree.fromstring(xml_data)
-    paragraphs = root.findall(".//PubmedArticle/MedlineCitation/Article/Abstract/AbstractText")
-    original_text = " ".join([para.text for para in paragraphs if para.text])
+
+    # Two different alternatives if only the abstract is desired or the full text
+    if abstract:
+        paragraphs = root.findall(".//PubmedArticle/MedlineCitation/Article/Abstract/AbstractText")
+        raw_text = " ".join([para.text for para in paragraphs if para.text])
+    else:
+        paragraphs = []
+        # Search for paragraphs under <body> node
+        for section in root.findall(".//body//sec"):
+            for paragraph in section.findall(".//p"):
+                paragraphs.append(paragraph.text)
+        raw_text = "\n".join(paragraphs)
 
     # Substitution of all NBSP characters with normal spaces
-    cleaned_text = original_text.replace("\u00A0", " ")  # '\u00A0' is the Unicode code for NBSP
+    cleaned_text = raw_text.replace("\u00A0", " ")  # '\u00A0' is the Unicode code for NBSP
 
     return cleaned_text or None
 
 
 # Main function to perform search and collect abstracts
-def main(term: str):  # Search term, for us, the name of a Tdark protein
+def main(term: str, abstract=True):  # Search term, for us (DarkLab) is the name of a Tdark protein
     retmax = 10000  # Max results per request (PubMed max)
     restart = 0  # Starting point for iterative search
     all_pmids = []
     now = datetime.now().strftime("%Y-%m-%d_%H.%M")
-    output_file = f"{term}_pubmed_abstracts_{now}.csv"
-    with open(output_file, mode='w', newline='', encoding='utf-8') as file:
+    output_file_path = f"data/{term}_pubmed_{now}.csv"
+
+    with open(output_file_path, mode='w', newline='', encoding='utf-8') as file:
         writer = csv.writer(file)
         writer.writerow(["Link", "Abstract"])
 
@@ -96,21 +107,25 @@ def main(term: str):  # Search term, for us, the name of a Tdark protein
 
     # Now collect abstracts for each PMID
     for pmid in all_pmids:
-        print(f"Fetching abstract for PMID: {pmid}")
-        abstract_data = fetch_paper(pmid)
-        if abstract_data:
-            abstract = parse_abstract(abstract_data)
+        print(f"Fetching content for PMID: {pmid}")
+        data = fetch_paper(pmid)
+        if data:
             if abstract:
-                link = f"https://pubmed.ncbi.nlm.nih.gov/{pmid}/"
-                with open(output_file, mode='a', newline='', encoding='utf-8') as file:
-                    writer = csv.writer(file)
-                    writer.writerow([link, abstract])
+                text = parse_result(data)
             else:
-                print(f"No abstract found for PMID {pmid}")
+                text = parse_result(data, abstract=False)
+
+            if text:
+                link = f"https://pubmed.ncbi.nlm.nih.gov/{pmid}/"
+                with open(output_file_path, mode='a', newline='', encoding='utf-8') as file:
+                    writer = csv.writer(file)
+                    writer.writerow([link, text])
+            else:
+                print(f"No text content found for PMID {pmid}")
                 # webbrowser.open(f"https://pubmed.ncbi.nlm.nih.gov/{pmid}/")
 
         time.sleep(1 / 3)  # Pause between requests
 
 
 if __name__ == "__main__":
-    main("tanc2")
+    main("tmem138", abstract=False)
