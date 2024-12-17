@@ -1,12 +1,12 @@
 import pandas as pd
 
-from WikiSpark_API import WikiSpark_API_key
+from API_keys import TDarkRAG_API_key
 from openai import OpenAI
 
 client = OpenAI(
     organization="org-gCNsUWlm38tlmiYgLBmlohiN",
     project="proj_yOJuKHUY1TB3ex0EfEmrMPCz",
-    api_key=WikiSpark_API_key
+    api_key=TDarkRAG_API_key
 )
 
 dataframe_path = r'C:\Users\danie\PycharmProjects\WikiSpark\analyzer\tanc2_pubmed_abstracts_2024-11-26_19.37.csv'

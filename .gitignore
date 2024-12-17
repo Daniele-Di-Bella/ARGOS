@@ -4,4 +4,4 @@ data-collection/storage
 **/__pycache__/
 *.pyc
 *pubmed_abstracts*
-scripts/WikiSpark_API.py
+scripts/API_keys.py
