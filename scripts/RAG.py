@@ -86,9 +86,10 @@ graph_builder = StateGraph(State).add_sequence([retrieve, generate])
 graph_builder.add_edge(START, "retrieve")
 graph = graph_builder.compile()
 
-# Run the application
-for step in graph.stream(
-        {"question": "What is the function and the clinical relevance of protein tmem138?"},
-        stream_mode="updates"
-):
-    print(f"{step}\n\n----------------\n")
+if __name__ == "__main__":
+    # Run the application
+    for step in graph.stream(
+            {"question": "What is the function and the clinical relevance of protein tmem138?"},
+            stream_mode="updates"
+    ):
+        print(f"{step}\n\n----------------\n")

@@ -7,8 +7,10 @@ import webbrowser
 
 from xml.etree import ElementTree
 from datetime import datetime
+from pathlib import Path
 
 BASE_URL = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/"
+data_path = Path(r"C:\Users\danie\PycharmProjects\TDarkRAG\data")
 
 
 # Search papers on PubMed
@@ -81,7 +83,7 @@ def main(term: str, abstract=True):  # Search term, for us (DarkLab) is the name
     restart = 0  # Starting point for iterative search
     all_pmids = []
     now = datetime.now().strftime("%Y-%m-%d_%H.%M")
-    output_file_path = f"data/{term}_pubmed_{now}.csv"
+    output_file_path = f"{data_path}/{term}_pubmed_{now}.csv"
 
     with open(output_file_path, mode='w', newline='', encoding='utf-8') as file:
         writer = csv.writer(file)
