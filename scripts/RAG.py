@@ -1,20 +1,24 @@
-import getpass
 import os
+from pathlib import Path
 
-from langchain_community.document_loaders import TextLoader, DirectoryLoader
+from langchain import hub
+from langchain_community.document_loaders import PyPDFLoader, DirectoryLoader
+from langchain_core.documents import Document
+from langchain_core.vectorstores import InMemoryVectorStore
 from langchain_openai import ChatOpenAI
 from langchain_openai import OpenAIEmbeddings
-from langchain_core.vectorstores import InMemoryVectorStore
-from pathlib import Path
 from langchain_text_splitters import RecursiveCharacterTextSplitter
-from langchain import hub
-from langchain_core.documents import Document
-from typing_extensions import List, TypedDict
 from langgraph.graph import START, StateGraph
+from typing_extensions import List, TypedDict
+
+from API_keys import TDarkRAG_API_key, LANGCHAIN_TRACING_V2, LANGCHAIN_ENDPOINT, LANGCHAIN_API_KEY, LANGCHAIN_PROJECT
 
 # Find OpenAI API key and set (1) which LLM and (2) encoding model are wanted
-if not os.environ.get("OPENAI_API_KEY"):
-    os.environ["OPENAI_API_KEY"] = getpass.getpass("Enter API key for OpenAI: ")
+os.environ["OPENAI_API_KEY"] = TDarkRAG_API_key
+os.environ["LANGCHAIN_TRACING_V2"] = LANGCHAIN_TRACING_V2
+os.environ["LANGCHAIN_ENDPOINT"] = LANGCHAIN_ENDPOINT
+os.environ["LANGCHAIN_API_KEY"] = LANGCHAIN_API_KEY
+os.environ["LANGCHAIN_PROJECT"] = LANGCHAIN_PROJECT
 
 llm = ChatOpenAI(model="gpt-4o-mini")
 
@@ -27,12 +31,10 @@ vector_store = InMemoryVectorStore(embeddings)
 docs_path = Path(r"C:\Users\danie\PycharmProjects\TDarkRAG\data")
 file_count = len([f for f in docs_path.iterdir() if f.is_file()])
 
-text_loader_kwargs = {"autodetect_encoding": True}
 loader = DirectoryLoader(
     str(docs_path),
-    glob="**/*.txt",  # which kind of file are desired
-    loader_cls=TextLoader,  # loader class
-    loader_kwargs=text_loader_kwargs  # asks TextLoader to auto-detect the doc encoding before failing
+    glob="**/*.pdf",  # which kind of file are desired
+    loader_cls=PyPDFLoader,  # loader class
 )
 try:
     docs = loader.load()  # return a list of the desired documents
@@ -89,7 +91,7 @@ graph = graph_builder.compile()
 if __name__ == "__main__":
     # Run the application
     for step in graph.stream(
-            {"question": "What is the function and the clinical relevance of protein tmem138?"},
+            {"question": "Do diatoms benefit from glacier melting?"},
             stream_mode="updates"
     ):
         print(f"{step}\n\n----------------\n")
