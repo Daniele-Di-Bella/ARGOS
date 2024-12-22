@@ -4,16 +4,27 @@ from pyzotero import zotero
 from API_keys import TDarkRAG_Zotero_API_key, Zotero_library_ID
 
 # Load the Zotero library
-zot = zotero.Zotero(
-    TDarkRAG_Zotero_API_key,  # The ID of the library to examine
-    "user",
-    Zotero_library_ID  # Zotero's API key
-)
 
 output_path = Path(r"C:\Users\danie\PycharmProjects\TDarkRAG\data")
 
 
-def download_pdfs(item):
+def load_library_items(library_API_key: str,
+                       library_ID: str,
+                       keyword: str,
+                       library_type="user"):
+    # Initialize Zotero library with pyzotero
+    library = zotero.Zotero(
+        library_ID,  # The ID of the library to examine
+        library_type,
+        library_API_key  # Zotero's API key
+    )
+
+    items = library.items(q=keyword)
+    for element in items:
+        download_items(element)
+
+
+def download_items(item):
     try:
         # Extract URL or DOI
         url = item['data'].get('url') or item['data'].get('DOI')
@@ -41,9 +52,3 @@ def download_pdfs(item):
 
 
 if __name__ == "__main__":
-    items = zot.top(limit=2)
-    for item in items:
-        key = item["key"]
-        children = zot.children(key)
-        for child in children:
-            print(f"Key: {key} | Child: {child}\n\n----------------\n")
