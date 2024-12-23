@@ -1,6 +1,7 @@
 import os
 import requests
 import time
+from goose3 import Goose
 from pathlib import Path
 from pyzotero import zotero
 from API_keys import TDarkRAG_Zotero_API_key, Zotero_library_ID
@@ -74,7 +75,19 @@ def download_items(library: zotero.Zotero, output_dir: str, file_name: str, item
     else:
         print(f"Error during {file_name} download from {url}: {response.status_code}\n\n"
               f"Trying one last time for {file_name}.")
-        g = Goose()
+
+        try:
+            g = Goose()
+            paper = g.extract(url=url)
+
+            paper_text = paper.cleaned_text
+
+            filepath = os.path.join(output_dir, file_name, ".txt")
+            with open(filepath, 'w', encoding='utf-8') as file:
+                file.write(paper_text)
+            print(f"{file_name}.txt successfully saved")
+        except Exception as e:
+            print(f"The retrieving of the text from {file_name} failed due to: {e}")
 
 
 
