@@ -3,7 +3,7 @@ import requests
 import time
 from goose3 import Goose
 from pathlib import Path
-from pyzotero import zotero
+from pyzotero import zotero, zotero_errors
 from API_keys import TDarkRAG_Zotero_API_key, Zotero_library_ID
 
 
@@ -22,37 +22,70 @@ def load_library_items(library_API_key: str,
     # Verify the existence of the output directory
     os.makedirs(output_dir, exist_ok=True)
 
-    # Select items according to a specific keyword and download them in the output directory
-    items = library.items(q=keyword, qmode="everything")
-    for element in items:
-        creator_summary = element.get("meta", {}).get("creatorSummary", (element["key"]+"."))
-        # the item ID key can be used as an alternative for naming the output files relative to the Zotero
-        # items that do not possess a creators' summary
+    # Retry mechanism for rate limiting
+    retry_attempts = 5
 
-        creator_summary = creator_summary.replace(" ", "-")
-        year = element.get("meta", {}).get("parsedDate", "Unknown")
-        file_name = f"{creator_summary}{year}"
+    for attempt in range(retry_attempts):
+        try:
+            # Select items according to a specific keyword and download them in the output directory
+            items = library.items(q=keyword, qmode="everything", limit=2)
+            for element in items:
+                # Verify if the selected item has an attachment or *is* an attachment
+                parentItem = element.get("data", {}).get("parentItem", 0)
+                if parentItem:
+                    parent = library.item(parentItem)
+                    creator_summary = parent.get("meta", {}).get("creatorSummary", (element["key"] + "."))
+                    # the item ID key can be used as an alternative for naming the output files relative to
+                    # the Zotero items that do not possess a creators' summary
 
-        # Verify if the selected item has an attachment to download
-        num_children = element.get("meta", {}).get("numChildren", 0)
-        if not num_children:  # aka, if numChildren=0
-            print(f"Can't find an attachment to download for {file_name}")
-            continue  # go to the next element in the cycle
+                    creator_summary = creator_summary.replace(" ", "-")
+                    year = parent.get("meta", {}).get("parsedDate", "Unknown")
+                else:
+                    creator_summary = element.get("meta", {}).get("creatorSummary", (element["key"] + "."))
+                    # the item ID key can be used as an alternative for naming the output files relative to
+                    # the Zotero items that do not possess a creators' summary
 
-        download_items(library, output_dir, file_name, element)
-        time.sleep(2)
+                    creator_summary = creator_summary.replace(" ", "-")
+                    year = element.get("meta", {}).get("parsedDate", "Unknown")
+
+                file_name = f"{creator_summary}{year}"
+
+                # print(f"Element {file_name}: {element}")  # for debugging
+
+                download_items(library, output_dir, file_name, element, bool(parentItem))
+
+            break  # Exit the retry loop if successful
+
+        # Handle rate limiting and backoff
+        except zotero_errors.HTTPError as e:
+            if e.response.status_code == 429:
+                retry_after = int(e.response.headers.get("Retry-After", 5))
+                print(f"Rate limit hit. Retrying after {retry_after} seconds...")
+                time.sleep(retry_after)
+            elif "Backoff" in e.response.headers:
+                backoff_time = int(e.response.headers["Backoff"])
+                print(f"Server is overloaded. Backing off for {backoff_time} seconds...")
+                time.sleep(backoff_time)
+            else:
+                print(f"HTTP error: {e}. Retrying...")
+        except Exception as e:
+            print(f"Unexpected error: {e}. Retrying...")
+
+        time.sleep(2 ** attempt)  # Exponential backoff
 
 
-def download_items(library: zotero.Zotero, output_dir: str, file_name: str, item: dict):
-    item_key = item["key"]
-    child = library.children(item_key)
-    child_key = child[0]["key"]  # useful for Zotero.dump
+def download_items(library: zotero.Zotero, output_dir: str, file_name: str, item: dict, isChild: bool):
+    if isChild:
+        download_key = item["key"]
+    else:
+        child = library.children(item["key"])
+        download_key = child[0]["key"]
 
     # Try to download the attachment with Zotero.dump (it may not work if you're using the
     # free version of Zotero)
     try:
         pdf_filename = file_name + ".pdf"
-        library.dump(child_key, pdf_filename, output_dir)
+        library.dump(download_key, pdf_filename, output_dir)
         print(f"{file_name}.pdf successfully downloaded")
         return  # go to the next attachment to download
     except Exception as e:
@@ -60,8 +93,6 @@ def download_items(library: zotero.Zotero, output_dir: str, file_name: str, item
               f"due to: {e}")
 
     # An alternative to Zotero.dump: (1) extract URL or DOI from item
-    # print(item)
-
     url = item['data'].get('url') or item['data'].get('DOI')
     if not url:
         print(f"No URL/DOI was found for: {file_name}. Can't download it.")
@@ -72,7 +103,8 @@ def download_items(library: zotero.Zotero, output_dir: str, file_name: str, item
         url = f"https://doi.org/{url}"
 
     # (3) Try to download a whole html file that contains the attachment
-    response = requests.get(url, stream=True)  # stream=True gives us the response in chunks
+    headers = {'User-Agent': 'Mozilla/5.0'}
+    response = requests.get(url, headers=headers, stream=True)  # stream=True gives us the response in chunks
     if response.status_code == 200:  # aka, if there are no errors
         # Save the file
         filepath = os.path.join(output_dir, (file_name + ".html"))
