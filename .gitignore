@@ -3,5 +3,6 @@
 data-collection/storage
 **/__pycache__/
 *.pyc
-*pubmed_abstracts*
 scripts/API_keys.py
+pyzotero-local/
+data/
