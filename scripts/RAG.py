@@ -10,7 +10,7 @@ from langchain_openai import ChatOpenAI
 from langchain_openai import OpenAIEmbeddings
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langgraph.graph import START, StateGraph
-from typing_extensions import List, TypedDict
+from typing_extensions import TypedDict
 
 from API_keys import TDarkRAG_API_key, LANGCHAIN_TRACING_V2, LANGCHAIN_ENDPOINT, LANGCHAIN_API_KEY, LANGCHAIN_PROJECT
 
@@ -65,14 +65,14 @@ print(f"All the documents were successfully split into {len(all_splits)} sub-doc
 # Embed the chunks and store them in the vector database that was chosen above
 document_ids = vector_store.add_documents(documents=all_splits)
 
-# Define the prompt to submit to the LLM
+# Choose from the hub the prompt to submit to the LLM
 prompt = hub.pull("hardkothari/blog-generator")
 
 
 # Define state for application
 class State(TypedDict):
     question: str
-    context: List[Document]
+    context: list[Document]
     answer: str
 
 
