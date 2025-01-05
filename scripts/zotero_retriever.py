@@ -1,3 +1,4 @@
+import re
 import time
 import shutil
 
@@ -12,6 +13,13 @@ def extract_zotero_items_keys(
         keyword: str,
         library_type="user"
 ):
+    """
+    :param library_API_key:
+    :param library_ID:
+    :param keyword:
+    :param library_type:
+    :return:
+    """
     # Initialize Zotero library with pyzotero
     library = zotero.Zotero(
         library_ID,  # The ID of the library to examine
@@ -19,7 +27,7 @@ def extract_zotero_items_keys(
         library_API_key  # Zotero's API key
     )
 
-    item_keys = []
+    items_key_title = []
 
     # Retry mechanism for rate limiting
     retry_attempts = 5
@@ -32,11 +40,14 @@ def extract_zotero_items_keys(
             for element in items:
                 key = element.get("key", 0)
                 parentItem = element.get("data", {}).get("parentItem", 0)
-                # print(key, parentItem)
-                if parentItem and parentItem not in item_keys:
-                    item_keys.append(parentItem)
+                if parentItem and parentItem not in items_key_title:
+                    # print(library.item(parentItem))
+                    title = (library.item(parentItem)).get("data", {}).get("title", 0)
+                    items_key_title.append((key, title))
                 else:
-                    item_keys.append(key)
+                    title = (library.item(key)).get("data", {}).get("title", 0)
+                    items_key_title.append((key, title))
+                # print(element)
             break  # exits the cycle if the request is successful
 
         # Handle rate limiting and backoff
@@ -58,8 +69,17 @@ def extract_zotero_items_keys(
 
         time.sleep(backoff_factor ** attempt)  # exponential backoff
 
-    # print(len(item_keys), item_keys)
-    return item_keys
+    # print(items_key_title)
+    return items_key_title
+
+
+def sanitize_filename(filename: str) -> str:
+    """
+    Removes or replaces invalid characters for file names on Windows.
+    :param filename:
+    :return:
+    """
+    return re.sub(r'[<>:"/\\|?*]', " ", filename)  # replaces prohibited characters with " "
 
 
 def copy_zotero_files(
@@ -68,6 +88,13 @@ def copy_zotero_files(
         file_extensions: set,
         output_dir: Path
 ):
+    """
+    :param zotero_storage_dir:
+    :param subdirs_to_check:
+    :param file_extensions:
+    :param output_dir:
+    :return:
+    """
     # Check the existance of output directory. If not existent, it is created
     output_dir.mkdir(parents=True, exist_ok=True)
 
@@ -76,12 +103,16 @@ def copy_zotero_files(
     subdir_not_found = 0
 
     # Iterate over subdirectories to check
-    for subdir_name in subdirs_to_check:
-        subdir_path = zotero_storage_dir / subdir_name  # / is a Path's combination operator
+    for subdir in subdirs_to_check:
+        subdir_path = zotero_storage_dir / subdir[0]  # / is a Path's combination operator
+        # remember that subdir is a (key, title) tuple, and the name of the subdir correspond to the first
+        # element of this tuple
         if subdir_path.is_dir():
             for file_path in subdir_path.rglob("*"):  # "*" iterates over all the files in the subdir
                 if file_path.suffix.lower() in file_extensions:
-                    output_file = output_dir / file_path.name.strip()
+                    sanitized_title = sanitize_filename(subdir[1])
+                    output_file_name = f"{sanitized_title}{file_path.suffix.lower()}"
+                    output_file = output_dir / output_file_name
                     if not output_file.exists():
                         shutil.copy2(file_path, output_file)
                     else:

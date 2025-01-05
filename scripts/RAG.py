@@ -2,7 +2,8 @@ import os
 from pathlib import Path
 
 from langchain import hub
-from langchain_community.document_loaders import PyPDFLoader, DirectoryLoader
+from langchain_community.document_loaders import ConcurrentLoader
+from langchain_community.document_loaders.parsers import PyPDFParser, HTMLParser
 from langchain_core.documents import Document
 from langchain_core.vectorstores import InMemoryVectorStore
 from langchain_openai import ChatOpenAI
@@ -13,7 +14,7 @@ from typing_extensions import List, TypedDict
 
 from API_keys import TDarkRAG_API_key, LANGCHAIN_TRACING_V2, LANGCHAIN_ENDPOINT, LANGCHAIN_API_KEY, LANGCHAIN_PROJECT
 
-# Find OpenAI API key and set (1) which LLM and (2) encoding model are wanted
+# Find OpenAI API key and set (1) which LLM and (2) which encoding model are wanted
 os.environ["OPENAI_API_KEY"] = TDarkRAG_API_key
 os.environ["LANGCHAIN_TRACING_V2"] = LANGCHAIN_TRACING_V2
 os.environ["LANGCHAIN_ENDPOINT"] = LANGCHAIN_ENDPOINT
@@ -27,15 +28,25 @@ embeddings = OpenAIEmbeddings(model="text-embedding-3-large")
 # Define the vector database to use
 vector_store = InMemoryVectorStore(embeddings)
 
-# Load the documents
+# Load the documents (1), (2)
 docs_path = Path(r"C:\Users\danie\PycharmProjects\TDarkRAG\data")
 file_count = len([f for f in docs_path.iterdir() if f.is_file()])
 
-loader = DirectoryLoader(
-    str(docs_path),
-    glob="**/*.pdf",  # which kind of file are desired
-    loader_cls=PyPDFLoader,  # loader class
+# (1) Define parsers for different types of files
+parsers = {
+    '.pdf': PyPDFParser(),
+    '.html': HTMLParser(),
+}
+
+# (2) Create a concurrent loader for the specified folder.
+loader = ConcurrentLoader.from_filesystem(
+    path="percorso/alla/tua/cartella",
+    glob="**/*",  # pattern to select every file
+    suffixes=['.pdf', '.html'],  # file extensions to include
+    parser=parsers,
+    num_workers=4  # number of threads for parallel loading
 )
+
 try:
     docs = loader.load()  # return a list of the desired documents
 except UnicodeDecodeError as u:
@@ -87,6 +98,7 @@ def generate(state: State):
 graph_builder = StateGraph(State).add_sequence([retrieve, generate])
 graph_builder.add_edge(START, "retrieve")
 graph = graph_builder.compile()
+
 
 if __name__ == "__main__":
     # Run the application
