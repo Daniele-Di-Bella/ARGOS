@@ -1,9 +1,10 @@
+beautifulsoup4==4.12.3
 langchain==0.3.14
 langchain_community==0.3.14
 langchain_core==0.3.29
 langchain_openai==0.2.14
 langchain_text_splitters==0.3.4
-langgraph==0.2.60
+langgraph==0.2.61
 pyzotero==1.5.28
 Requests==2.32.3
 typing_extensions==4.12.2

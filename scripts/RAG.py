@@ -2,8 +2,7 @@ import os
 from pathlib import Path
 
 from langchain import hub
-from langchain_community.document_loaders import ConcurrentLoader
-from langchain_community.document_loaders.parsers import PyPDFParser, HTMLParser
+from langchain_community.document_loaders import PyPDFLoader, UnstructuredHTMLLoader
 from langchain_core.documents import Document
 from langchain_core.vectorstores import InMemoryVectorStore
 from langchain_openai import ChatOpenAI
@@ -28,29 +27,27 @@ embeddings = OpenAIEmbeddings(model="text-embedding-3-large")
 # Define the vector database to use
 vector_store = InMemoryVectorStore(embeddings)
 
-# Load the documents (1), (2)
+# Load the documents
 docs_path = Path(r"C:\Users\danie\PycharmProjects\TDarkRAG\data")
 file_count = len([f for f in docs_path.iterdir() if f.is_file()])
 
-# (1) Define parsers for different types of files
-parsers = {
-    '.pdf': PyPDFParser(),
-    '.html': HTMLParser(),
-}
 
-# (2) Create a concurrent loader for the specified folder.
-loader = ConcurrentLoader.from_filesystem(
-    path="percorso/alla/tua/cartella",
-    glob="**/*",  # pattern to select every file
-    suffixes=['.pdf', '.html'],  # file extensions to include
-    parser=parsers,
-    num_workers=4  # number of threads for parallel loading
-)
+def load_documents_from_folder(folder_path: str):
+    documents = []
+    for filename in os.listdir(folder_path):
+        file_path = os.path.join(folder_path, filename)
+        if filename.endswith('.pdf'):
+            loader = PyPDFLoader(file_path)
+            documents.extend(loader.load())
+        elif filename.endswith('.html'):
+            loader = UnstructuredHTMLLoader(file_path)
+            documents.extend(loader.load())
+        else:
+            print(f"Unsupported format: {filename}")
+    return documents
 
-try:
-    docs = loader.load()  # return a list of the desired documents
-except UnicodeDecodeError as u:
-    print(f"{file_count - len(docs)} have not been loaded, probably because of: {u}")
+
+all_documents = load_documents_from_folder(docs_path)
 
 # Divide the documents into chunks
 text_splitter = RecursiveCharacterTextSplitter(
@@ -58,7 +55,7 @@ text_splitter = RecursiveCharacterTextSplitter(
     chunk_overlap=200,  # chunk overlap (characters)
     add_start_index=True,  # track index in original document
 )
-all_splits = text_splitter.split_documents(docs)
+all_splits = text_splitter.split_documents(all_documents)
 
 print(f"All the documents were successfully split into {len(all_splits)} sub-documents.")
 
@@ -78,7 +75,8 @@ class State(TypedDict):
 
 # Define application steps
 def retrieve(state: State):
-    retrieved_docs = vector_store.similarity_search(state["question"])
+    retriever = vector_store.as_retriever(searh_type="similarity", k=10)
+    retrieved_docs = retriever.get_relevant_documents(state["question"])
     return {"context": retrieved_docs}
 
 
@@ -87,7 +85,7 @@ def generate(state: State):
     message_for_llm = prompt.invoke(
         {
             "text": docs_content,
-            "target_audience": "people that have a degree in medicine or biology"
+            "target_audience": "Psychologists and other people with an high expertise in pedagogy."
         }
     )
     response = llm.invoke(message_for_llm)
@@ -99,11 +97,10 @@ graph_builder = StateGraph(State).add_sequence([retrieve, generate])
 graph_builder.add_edge(START, "retrieve")
 graph = graph_builder.compile()
 
-
 if __name__ == "__main__":
     # Run the application
     for step in graph.stream(
-            {"question": "Do diatoms benefit from glacier melting?"},
+            {"question": "Do diatoms benefit from Greenland Ice Sheet (GrIS) melting?"},
             stream_mode="updates"
     ):
         print(f"{step}\n\n----------------\n")

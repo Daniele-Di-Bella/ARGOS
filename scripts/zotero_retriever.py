@@ -128,7 +128,7 @@ def copy_zotero_files(
 if __name__ == "__main__":
     copy_zotero_files(
         zotero_storage_dir=Path(r"C:\Users\danie\Zotero\storage"),
-        subdirs_to_check=extract_zotero_items_keys(TDarkRAG_Zotero_API_key, Zotero_library_ID, "diatoms"),
+        subdirs_to_check=extract_zotero_items_keys(TDarkRAG_Zotero_API_key, Zotero_library_ID, "UGGT"),
         file_extensions={".pdf", ".html"},
         output_dir=Path(r"C:\Users\danie\PycharmProjects\TDarkRAG\data")
     )
