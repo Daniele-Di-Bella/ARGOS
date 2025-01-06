@@ -70,7 +70,7 @@ def extract_zotero_items_keys(
         time.sleep(backoff_factor ** attempt)  # exponential backoff
 
     # print(items_key_title)
-    return items_key_title
+    return library, items_key_title
 
 
 def sanitize_filename(filename: str) -> str:
@@ -83,12 +83,14 @@ def sanitize_filename(filename: str) -> str:
 
 
 def copy_zotero_files(
+        library: zotero.Zotero,
         zotero_storage_dir: Path,
         subdirs_to_check: list,
         file_extensions: set,
         output_dir: Path
 ):
     """
+    :param library:
     :param zotero_storage_dir:
     :param subdirs_to_check:
     :param file_extensions:
@@ -119,16 +121,30 @@ def copy_zotero_files(
                         already_present += 1
         else:
             print(f'Subdirectory not found: {subdir_path}')
-            subdir_not_found += 1
+            parentItem = library.item(subdir[0]).get("data", {}).get("parentItem", 0)
+            numChildren = library.item(subdir[0]).get("meta", {}).get("numChildren", 0)
+            if numChildren:
+                childItem = library.children(subdir[0])[0].get("key", {})
+            if parentItem:
+                print(f"Trying with {subdir_path} parentItem: {parentItem}")
+                subdirs_to_check.append((parentItem, subdir[1]))
+            elif childItem:
+                print(f"Trying with {subdir_path} first childItem: {childItem}")
+                subdirs_to_check.append((childItem, subdir[1]))
+            else:
+                print(f"Error with: {library.item(subdir[0])}")
+                subdir_not_found += 1
 
     print(f"Subdirs to ckeck: {len(subdirs_to_check)}; not found: {subdir_not_found}; content already "
           f"copied: {already_present}")
 
 
 if __name__ == "__main__":
+    library, subdirs_to_check = extract_zotero_items_keys(TDarkRAG_Zotero_API_key, Zotero_library_ID, "uggt")
     copy_zotero_files(
+        library = library,
         zotero_storage_dir=Path(r"C:\Users\danie\Zotero\storage"),
-        subdirs_to_check=extract_zotero_items_keys(TDarkRAG_Zotero_API_key, Zotero_library_ID, "UGGT"),
+        subdirs_to_check=subdirs_to_check,
         file_extensions={".pdf", ".html"},
         output_dir=Path(r"C:\Users\danie\PycharmProjects\TDarkRAG\data")
     )
