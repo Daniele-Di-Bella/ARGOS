@@ -63,7 +63,7 @@ print(f"All the documents were successfully split into {len(all_splits)} sub-doc
 document_ids = vector_store.add_documents(documents=all_splits)
 
 # Choose from the hub the prompt to submit to the LLM
-prompt = hub.pull("hardkothari/blog-generator")
+prompt = hub.pull("tdarkrag-wikipedia-page-generation")
 
 
 # Define state for application
@@ -75,17 +75,18 @@ class State(TypedDict):
 
 # Define application steps
 def retrieve(state: State):
-    retriever = vector_store.as_retriever(searh_type="similarity", k=10)
+    retriever = vector_store.as_retriever(searh_type="similarity", k=100)
     retrieved_docs = retriever.get_relevant_documents(state["question"])
     return {"context": retrieved_docs}
 
 
 def generate(state: State):
     docs_content = "\n\n".join(f"source: {doc.metadata['source']}\nchunk: {doc.page_content}" for doc in state["context"])
+    # print(docs_content)
     message_for_llm = prompt.invoke(
         {
-            "text": docs_content,
-            "target_audience": "Biologists and people with a degree in medicine."
+            "target_audience": "Biologists and people with a degree in medicine.",
+            "context": docs_content
         }
     )
     response = llm.invoke(message_for_llm)
@@ -119,7 +120,7 @@ graph = graph_builder.compile()
 if __name__ == "__main__":
     # Run the application
     for step in graph.stream(
-            {"question": "What is UGGT?"},
+            {"question": "What is UGGT? Which is its function?"},
             stream_mode="updates"
     ):
         print(f"{step}\n\n----------------\n")
