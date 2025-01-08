@@ -7,3 +7,4 @@ scripts/API_keys.py
 pyzotero-local/
 data/
 scripts/pubmed_scraper.py
+outputs/

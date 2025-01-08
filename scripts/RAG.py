@@ -68,7 +68,7 @@ prompt = hub.pull("hardkothari/blog-generator")
 
 # Define state for application
 class State(TypedDict):
-    question: str
+    question: str  # aka, which question(s) will answer our Wikipedia page?
     context: list[Document]
     answer: str
 
@@ -81,15 +81,34 @@ def retrieve(state: State):
 
 
 def generate(state: State):
-    docs_content = "\n\n".join(doc.page_content for doc in state["context"])
+    docs_content = "\n\n".join(f"source: {doc.metadata['source']}\nchunk: {doc.page_content}" for doc in state["context"])
     message_for_llm = prompt.invoke(
         {
             "text": docs_content,
-            "target_audience": "Psychologists and other people with an high expertise in pedagogy."
+            "target_audience": "Biologists and people with a degree in medicine."
         }
     )
     response = llm.invoke(message_for_llm)
+    # Save the answer to a file
+    save_response_to_file(state["question"], response.content)
     return {"answer": response.content}
+
+
+def save_response_to_file(question: str, answer: str):
+    # Create the output folder if it doesn't exist
+    output_dir = Path(r"C:\Users\danie\PycharmProjects\TDarkRAG\outputs")
+    output_dir.mkdir(exist_ok=True)
+
+    # Replace any invalid characters in the filename
+    sanitized_filename = "".join(
+        c if c.isalnum() or c in " _-" else "_" for c in question
+    ) + ".md"
+
+    # Save the answer as a Markdown file
+    file_path = output_dir / sanitized_filename
+    with open(file_path, "w", encoding="utf-8") as file:
+        file.write(f"# Question(s) to answer\n{question}\n\n# Wikipedia page\n{answer}")
+    print(f"Response saved to {file_path}")
 
 
 # Compile application and test with LangGraph
@@ -100,7 +119,7 @@ graph = graph_builder.compile()
 if __name__ == "__main__":
     # Run the application
     for step in graph.stream(
-            {"question": "Do diatoms benefit from Greenland Ice Sheet (GrIS) melting?"},
+            {"question": "What is UGGT?"},
             stream_mode="updates"
     ):
         print(f"{step}\n\n----------------\n")
