@@ -1,68 +1,53 @@
-from rouge import Rouge
-from nltk.translate.bleu_score import sentence_bleu
 from nltk import word_tokenize
-
-rouge = Rouge()
+from nltk.translate.bleu_score import sentence_bleu
+from rouge import Rouge
+from sentence_transformers import SentenceTransformer
+from sklearn.metrics.pairwise import cosine_similarity
 
 
 def calculate_rouge(candidate, reference):
     """
-    candidate, reference: generated and ground-truth sentences
+    :param candidate:
+    :param reference:
+    :return:
     """
-    scores = rouge.get_scores([candidate], reference)
-    return scores
-
+    rouge = Rouge()
+    scores = rouge.get_scores(candidate, reference)
+    print(scores)
 
 
 def calculate_bleu(candidate, reference):
-    '''
-    candidate, reference: generated and ground-truth sentences
-    '''
+    """
+    :param candidate:
+    :param reference:
+    :return:
+    """
     reference = word_tokenize(reference)
     candidate = word_tokenize(candidate)
     score = sentence_bleu(reference, candidate)
-    return score
-
-from nltk.translate import meteor
-
-def calculate_meteor(candidate, reference):
-  '''
-  candidate, reference: tokenized list of words in the sentence
-  '''
-  reference = word_tokenize(reference)
-  candidate = word_tokenize(candidate)
-  meteor_score = round(meteor([candidate],reference), 4)
-  return meteor_score
+    print(score)
 
 
-import numpy as np
-import copy
-
-def get_bleu_score(sentence, remaining_sentences):
-    lst = []
-    for i in remaining_sentences:
-        bleu = sentence_bleu(sentence, i)
-        lst.append(bleu)
-    return lst
+# SBERT
+def calculate_sbert(candidate, reference):
+    model = SentenceTransformer('all-MiniLM-L6-v2')
+    embeddings_candidate = model.encode([candidate])
+    embeddings_reference = model.encode([reference])
+    similarity = cosine_similarity(embeddings_candidate, embeddings_reference)
+    print(f"Cosine similarity SBERT: {similarity[0][0]}")
 
 
-def calculate_selfBleu(sentences):
-    """
-    The lower the value of the self-bleu score, the higher the diversity in the generated text. Long text
-    generation tasks like story generation, news generation, etc. could be a good fit to keep an eye on such
-    metrics, helping evaluate the redundancy and monotonicity in the model.
-    :param sentences:
-    :return:
-    """
-    bleu_scores = []
+if __name__ == "__main__":
+    candidate_path = r"C:\Users\danie\PycharmProjects\TDarkRAG\outputs\test\What is UGGT_ Which is its function_.md"
+    reference_path = r"C:\Users\danie\PycharmProjects\TDarkRAG\outputs\test\reference_text.md"
 
-    for i in sentences:
-        sentences_copy = copy.deepcopy(sentences)
-        remaining_sentences = sentences_copy.remove(i)
-        print(sentences_copy)
-        bleu = get_bleu_score(i,sentences_copy)
-        bleu_scores.append(bleu)
+    with open(candidate_path, 'r', encoding='utf-8') as file:
+        candidate = file.read()
 
-    return np.mean(bleu_scores)
+    with open(reference_path, 'r', encoding='utf-8') as file:
+        reference = file.read()
 
-calculate_selfBleu(sentences)
+    calculate_rouge(candidate, reference)
+    calculate_sbert(candidate, reference)
+
+
