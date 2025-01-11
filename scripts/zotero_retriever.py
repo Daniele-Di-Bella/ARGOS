@@ -90,16 +90,16 @@ def copy_zotero_files(
         keywords: str
 ):
     """
+    :param keywords:
     :param library:
     :param zotero_storage_dir:
     :param subdirs_to_check:
     :param file_extensions:
-    :param output_dir:
     :return:
     """
-    # Check the existance of output directory. If not existent, it is created
+    # Check the existence of output directory. If not existent, it is created
     base_dir = Path.cwd()
-    output_dir = base_dir / keywords
+    output_dir = base_dir / "data" / keywords
     output_dir.mkdir(parents=True, exist_ok=True)
 
     # Initialize a counter to keep track of some useful data

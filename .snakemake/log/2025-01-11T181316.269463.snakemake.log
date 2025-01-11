@@ -1,0 +1,41 @@
+host: LAPTOP-VAMO11EM
+Building DAG of jobs...
+Provided cores: 6
+Rules claiming more threads will be scaled down.
+Job stats:
+job                 count
+----------------  -------
+RAG                     1
+all                     1
+zotero_retrieval        1
+total                   3
+
+Select jobs to execute...
+Execute 1 jobs...
+
+[Sat Jan 11 18:13:16 2025]
+localrule zotero_retrieval:
+    input: scripts/zotero_retriever.py
+    output: C:/Users/danie/PycharmProjects/TDarkRAG/data
+    jobid: 2
+    reason: Updated input files: scripts/zotero_retriever.py
+    resources: tmpdir=C:\Users\danie\AppData\Local\Temp
+
+[WinError 145] The directory is not empty: 'C:/Users/danie/PycharmProjects/TDarkRAG/data'
+RuleException:
+NameError in file C:\Users\danie\PycharmProjects\TDarkRAG\Snakefile, line 32:
+The name "'" is unknown in this context. Please make sure that you defined that variable. Also note that braces not used for variable access have to be escaped by repeating them, i.e. {{print $1}}
+[Sat Jan 11 18:13:16 2025]
+Error in rule zotero_retrieval:
+    jobid: 2
+    input: scripts/zotero_retriever.py
+    output: C:/Users/danie/PycharmProjects/TDarkRAG/data
+
+Removing output files of failed job zotero_retrieval since they might be corrupted:
+C:/Users/danie/PycharmProjects/TDarkRAG/data
+[WinError 145] The directory is not empty: 'C:/Users/danie/PycharmProjects/TDarkRAG/data'
+Shutting down, this might take some time.
+Exiting because a job execution failed. Look above for error message
+Complete log: .snakemake\log\2025-01-11T181316.269463.snakemake.log
+WorkflowError:
+At least one job did not complete successfully.

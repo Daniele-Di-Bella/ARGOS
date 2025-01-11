@@ -71,7 +71,7 @@ def calculate_sbert(candidate_path, reference_path):
     mean_similarity = similarity_matrix.mean()
 
     with open(candidate_path, 'a', encoding='utf-8') as file:
-        file.write("\n\n## Evaluation\n\nMean SBERT cosine similarity: {mean_similarity:}")
+        file.write(f"\n\n## Evaluation\n\nMean SBERT cosine similarity: {mean_similarity:}")
 
 
 if __name__ == "__main__":
