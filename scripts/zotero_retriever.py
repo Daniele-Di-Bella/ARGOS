@@ -1,22 +1,22 @@
+import argparse
 import re
 import time
 import shutil
 
 from pathlib import Path
 from pyzotero import zotero, zotero_errors
-from API_keys import TDarkRAG_Zotero_API_key, Zotero_library_ID
 
 
 def extract_zotero_items_keys(
         library_API_key: str,
         library_ID: str,
-        keyword: str,
+        keywords: str,
         library_type="user"
 ):
     """
     :param library_API_key:
     :param library_ID:
-    :param keyword:
+    :param keywords:
     :param library_type:
     :return:
     """
@@ -36,7 +36,7 @@ def extract_zotero_items_keys(
     for attempt in range(retry_attempts):
         try:
             # Select items according to a specific keyword and extract their key
-            items = library.items(q=keyword, qmode="everything")
+            items = library.items(q=keywords, qmode="everything")
             for element in items:
                 key = element.get("key", 0)
                 parentItem = element.get("data", {}).get("parentItem", 0)
@@ -70,7 +70,7 @@ def extract_zotero_items_keys(
         time.sleep(backoff_factor ** attempt)  # exponential backoff
 
     # print(items_key_title)
-    return library, items_key_title
+    return library, keywords, items_key_title
 
 
 def sanitize_filename(filename: str) -> str:
@@ -87,7 +87,7 @@ def copy_zotero_files(
         zotero_storage_dir: Path,
         subdirs_to_check: list,
         file_extensions: set,
-        output_dir: Path
+        keywords: str
 ):
     """
     :param library:
@@ -98,6 +98,8 @@ def copy_zotero_files(
     :return:
     """
     # Check the existance of output directory. If not existent, it is created
+    base_dir = Path.cwd()
+    output_dir = base_dir / keywords
     output_dir.mkdir(parents=True, exist_ok=True)
 
     # Initialize a counter to keep track of some useful data
@@ -138,13 +140,28 @@ def copy_zotero_files(
     print(f"Subdirs to ckeck: {len(subdirs_to_check)}; not found: {subdir_not_found}; content already "
           f"copied: {already_present}")
 
+    return output_dir
+
 
 if __name__ == "__main__":
-    library, subdirs_to_check = extract_zotero_items_keys(TDarkRAG_Zotero_API_key, Zotero_library_ID, "uggt")
+    parser = argparse.ArgumentParser(description="Retrieve sources from user Zotero library")
+    parser.add_argument("--tdarkrag_zotero_api_key", required=True, help="API key to access user's Zotero library.")
+    parser.add_argument("--zotero_library_id", required=True, help="User's Zotero library ID.")
+    parser.add_argument("--keywords", required=True, help="Keywords to guide the search.")
+    parser.add_argument("--zotero_storage_dir", required=True, help="Path to the user's Zotero library local storage")
+    parser.add_argument("--file_extensions", default={".pdf", ".html"}, help="Accepted extensions for the retrieved files")
+    args = parser.parse_args()
+
+    library, keywords, subdirs_to_check = extract_zotero_items_keys(
+        args.tdarkrag_zotero_api_key,
+        args.zotero_library_id,
+        args.keywords
+    )
+
     copy_zotero_files(
-        library = library,
-        zotero_storage_dir=Path(r"C:\Users\danie\Zotero\storage"),
+        library=library,
+        zotero_storage_dir=args.zotero_storage_dir,
         subdirs_to_check=subdirs_to_check,
-        file_extensions={".pdf", ".html"},
-        output_dir=Path(r"C:\Users\danie\PycharmProjects\TDarkRAG\data")
+        file_extensions=args.file_extensions,
+        keywords=keywords
     )
