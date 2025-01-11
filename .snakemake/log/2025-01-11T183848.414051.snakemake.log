@@ -1,5 +1,0 @@
-host: LAPTOP-VAMO11EM
-Building DAG of jobs...
-WildcardError in rule RAG in file C:\Users\danie\PycharmProjects\TDarkRAG\Snakefile, line 35:
-Wildcards in input files cannot be determined from output files: (rule RAG, line 54, C:\Users\danie\PycharmProjects\TDarkRAG\Snakefile)
-'keywords'

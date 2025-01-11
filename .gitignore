@@ -8,3 +8,4 @@ pyzotero-local/
 data/
 scripts/pubmed_scraper.py
 outputs/
+.snakemake
