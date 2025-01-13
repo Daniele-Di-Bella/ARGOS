@@ -108,7 +108,7 @@ def copy_zotero_files(
 
     # Iterate over subdirectories to check
     for subdir in subdirs_to_check:
-        subdir_path = zotero_storage_dir / subdir[0]  # / is a Path's combination operator
+        subdir_path = zotero_storage_dir / Path(subdir[0])  # / is a Path's combination operator
         # remember that subdir is a (key, title) tuple, and the name of the subdir correspond to the first
         # element of this tuple
         if subdir_path.is_dir():
@@ -149,8 +149,11 @@ if __name__ == "__main__":
     parser.add_argument("--zotero_library_id", required=True, help="User's Zotero library ID.")
     parser.add_argument("--keywords", required=True, help="Keywords to guide the search.")
     parser.add_argument("--zotero_storage_dir", required=True, help="Path to the user's Zotero library local storage")
-    parser.add_argument("--file_extensions", default={".pdf", ".html"}, help="Accepted extensions for the retrieved files")
+    parser.add_argument("--file_extensions", help="Comma-separated list of file extensions to include (e.g., .pdf,.html)")
     args = parser.parse_args()
+
+    args.file_extensions = args.file_extensions.split(",")
+    args.file_extensions = set(args.file_extensions)
 
     library, keywords, subdirs_to_check = extract_zotero_items_keys(
         args.tdarkrag_zotero_api_key,

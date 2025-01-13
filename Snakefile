@@ -4,6 +4,7 @@ from scripts.API_keys import TDarkRAG_Zotero_API_key, Zotero_library_ID
 def sanitize_filename(question):
     return "".join(c if c.isalnum() or c in " _-" else "_" for c in question) + ".md"
 
+keywords = config["keywords"]
 
 rule all:
     input:
@@ -15,11 +16,11 @@ rule zotero_retrieval:
     params:
         tdarkrag_zotero_api_key=TDarkRAG_Zotero_API_key,
         zotero_library_id=Zotero_library_ID,
-        keywords="{keywords}",
+        keywords=keywords,
         zotero_storage_dir=Path(r"C:\Users\danie\Zotero\storage"),
-        file_extensions={".pdf", ".html"}
+        file_extensions=",".join({".pdf", ".html"})
     output:
-        "data/{keywords}/"
+        directory(f"data/{keywords}/")
     run:
         command = (
             f"python scripts/zotero_retriever.py "
@@ -34,7 +35,7 @@ rule zotero_retrieval:
 
 rule RAG:
     input:
-        input_dir="data/{keywords}/",  # Path to the folder containing the documents
+        input_dir=f"data/{keywords}/",  # Path to the folder containing the documents
         output_dir="outputs/"  # Path to output folder
     params:
         question="What is UGGT?",  # The question to be answered
