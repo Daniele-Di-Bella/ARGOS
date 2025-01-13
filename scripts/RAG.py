@@ -41,7 +41,7 @@ def save_response_to_file(output_dir, question, answer):
     sanitized_filename = "".join(c if c.isalnum() or c in " _-" else "_" for c in question) + ".md"
     file_path = output_dir / sanitized_filename
     with open(file_path, "w", encoding="utf-8") as file:
-        file.write(f"# Question(s) to answer\n{question}\n\n# Wikipedia page\n{answer}")
+        file.write(f"# Wikipedia page\n{answer}")
     print(f"Response saved to {file_path}")
     return str(file_path)
 

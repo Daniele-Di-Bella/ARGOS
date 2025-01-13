@@ -1,4 +1,5 @@
 import argparse
+from pathlib import Path
 
 from nltk import word_tokenize
 from nltk.translate.bleu_score import sentence_bleu
@@ -41,7 +42,7 @@ Unfortunately inputs longer that 256 tokens are truncated, so a sliding window f
 
 
 def sliding_window(text, window_size=256, step_size=128):
-    tokenizer = AutoTokenizer.from_pretrained('sentence-transformers/all-MiniLM-L6-v2')
+    tokenizer = AutoTokenizer.from_pretrained('sentence-transformers/all-mpnet-base-v2')
     tokens = tokenizer.tokenize(text)
     chunks = []
     for start in range(0, len(tokens), step_size):
@@ -60,7 +61,7 @@ def calculate_sbert(candidate_path, reference_path):
     with open(reference_path, 'r', encoding='utf-8') as file:
         reference = file.read()
 
-    model = SentenceTransformer('sentence-transformers/all-MiniLM-L6-v2')
+    model = SentenceTransformer('sentence-transformers/all-mpnet-base-v2')
 
     chunks_candidate = sliding_window(candidate)
     chunks_reference = sliding_window(reference)
@@ -72,6 +73,15 @@ def calculate_sbert(candidate_path, reference_path):
 
     with open(candidate_path, 'a', encoding='utf-8') as file:
         file.write(f"\n\n## Evaluation\n\nMean SBERT cosine similarity: {mean_similarity:}")
+
+    candidate_path = Path(candidate_path)
+    stem = candidate_path.stem
+    suffix = candidate_path.suffix
+
+    new_name = f"{stem}[evaluated]{suffix}"
+    new_path = candidate_path.with_name(new_name)
+
+    candidate_path.rename(new_path)
 
 
 if __name__ == "__main__":

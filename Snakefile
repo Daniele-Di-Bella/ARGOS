@@ -2,13 +2,17 @@ from pathlib import Path
 from scripts.API_keys import TDarkRAG_Zotero_API_key, Zotero_library_ID
 
 def sanitize_filename(question):
-    return "".join(c if c.isalnum() or c in " _-" else "_" for c in question) + ".md"
+    return "".join(c if c.isalnum() or c in " _-" else "_" for c in question)
+
 
 keywords = config["keywords"]
+question = config["question"]
+
 
 rule all:
     input:
-        "outputs/*/*.md"  # final pipeline file
+        f"outputs/{sanitize_filename(question)}[evaluated].md"  # final pipeline file
+
 
 rule zotero_retrieval:
     input:
@@ -38,31 +42,23 @@ rule RAG:
         input_dir=f"data/{keywords}/",  # Path to the folder containing the documents
         output_dir="outputs/"  # Path to output folder
     params:
-        question="What is UGGT?",  # The question to be answered
+        question=question,  # The question to be answered
         llm_model="gpt-4o-mini",
         embeddings_model="text-embedding-3-large",
         vector_store_type="InMemory"
     output:
-        temp("outputs/{sanitized_question}")  # Placeholder for the sanitized question
+        f"outputs/{sanitize_filename(question)}.md"
     run:
-        # Sanitize the question to create a valid filename
-        sanitized_question = sanitize_filename(params.question)
-        output_path = f"outputs/{sanitized_question}"
-
-        # Run the Python command without passing output_path as an argument
         command = (
-            f"python scripts/RAG.py "
-            f"--input_dir {{input.input_dir}} "
-            f"--output_dir {{input.output_dir}} "
-            f"--question {{params.question}} "
-            f"--llm_model {{params.llm_model}} "
-            f"--embeddings_model {{params.embeddings_model}} "
-            f"--vector_store_type {{params.vector_store_type}}"
+            f'python scripts/RAG.py '
+            f'--input_dir {{input.input_dir}} '
+            f'--output_dir {{input.output_dir}} '
+            f'--question "{params.question}" '
+            f'--llm_model {{params.llm_model}} '
+            f'--embeddings_model {{params.embeddings_model}} '
+            f'--vector_store_type {{params.vector_store_type}}'
         )
         shell(command)
-
-        # At the end of the rule, specify the output file
-        touch(output_path)
 
 
 rule evaluation:
@@ -70,6 +66,11 @@ rule evaluation:
         candidate=rules.RAG.output,
         reference="outputs/reference_text.md"
     output:
-        candidate=r"C:\Users\danie\PycharmProjects\TDarkRAG\outputs\test\What is UGGT_ Which is its function_.md"
-    script:
-        "scripts/evaluation.py"
+        f"outputs/{sanitize_filename(question)}[evaluated].md"
+    run:
+        command = (
+         f'python scripts/evaluation.py '
+         f'--candidate "{input.candidate}" '
+         f'--reference "{input.reference}" '
+        )
+        shell(command)
