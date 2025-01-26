@@ -2,7 +2,7 @@ from pathlib import Path
 from scripts.API_keys import TDarkRAG_Zotero_API_key, Zotero_library_ID
 
 def sanitize_filename(question):
-    return "".join(c if c.isalnum() or c in " _-" else "_" for c in question)
+    return "".join(c if c.isalnum() or c in " _-" else "_" for c in question).strip()
 
 
 keywords = config["keywords"]
@@ -11,7 +11,7 @@ question = config["question"]
 
 rule all:
     input:
-        f"outputs/{sanitize_filename(question)}.md"  # final pipeline file
+        f"outputs/{keywords}/{sanitize_filename(question)}.md"  # final pipeline file
 
 
 rule zotero_retrieval:
@@ -40,14 +40,14 @@ rule zotero_retrieval:
 rule RAG:
     input:
         input_dir=f"data/{keywords}/",  # Path to the folder containing the documents
-        output_dir="outputs/"  # Path to output folder
+        output_dir=f"outputs/{keywords}"  # Path to output folder
     params:
         question=question,  # The question to be answered
         llm_model="gpt-4o-mini",
         embeddings_model="text-embedding-3-large",
         vector_store_type="InMemory"
     output:
-        f"outputs/{sanitize_filename(question)}.md"
+        f"outputs/{keywords}/{sanitize_filename(question)}.md"
     run:
         command = (
             f'python scripts/RAG.py '
@@ -65,11 +65,11 @@ rule evaluation:
     input:
         question=question,
         to_be_evaluated=rules.RAG.output,
-        reference_text=f"outputs/{keywords}_RT.md",
+        reference_text=f"outputs/{keywords}/{keywords}_RT.md",
         keyword=keywords,
         csv_path="evaluation.csv"
     output:
-        f"outputs/{sanitize_filename(question)}.md"
+        rules.RAG.output  # overwrites RAG's output
     run:
         command = (
          f'python scripts/evaluation.py '

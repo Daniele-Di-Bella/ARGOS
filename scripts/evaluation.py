@@ -31,7 +31,8 @@ def calculate_geval_correctness(question: str, to_be_evaluated: str, reference_t
 
     correctness_metric.measure(test_case)
     with open(to_be_evaluated, "a", encoding='utf-8') as file:
-        file.write(f"GEval correctness score: {correctness_metric.score}\n"
+        file.write(f"## Evaluation\n"
+                   f"GEval correctness score: {correctness_metric.score}\n"
                    f"Reason: {correctness_metric.reason}")
 
     # Report the GEval score also in a .csv that will be used for statistical analysis
