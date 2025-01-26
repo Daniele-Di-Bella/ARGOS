@@ -1,95 +1,65 @@
 import argparse
-from pathlib import Path
+import csv
 
-from nltk import word_tokenize
-from nltk.translate.bleu_score import sentence_bleu
-from rouge import Rouge
-from sentence_transformers import SentenceTransformer
-from sklearn.metrics.pairwise import cosine_similarity
-from transformers import AutoTokenizer
+from deepeval.metrics import GEval
+from deepeval.test_case import LLMTestCaseParams, LLMTestCase
 
 
-# ROUGE metric
-def calculate_rouge(candidate, reference):
-    """
-    :param candidate:
-    :param reference:
-    :return:
-    """
-    rouge = Rouge()
-    scores = rouge.get_scores(candidate, reference)
-    print(scores)
+# GEval metric
+def calculate_geval_correctness(question: str, to_be_evaluated: str, reference_text: str, keyword: str, csv_path: str):
+    with open(to_be_evaluated, 'r', encoding='utf-8') as file:
+        actual_output = file.read()
 
+    with open(reference_text, 'r', encoding='utf-8') as file:
+        expected_output = file.read()
 
-# BLEU metric
-def calculate_bleu(candidate, reference):
-    """
-    :param candidate:
-    :param reference:
-    :return:
-    """
-    reference = word_tokenize(reference)
-    candidate = word_tokenize(candidate)
-    score = sentence_bleu(reference, candidate)
-    print(score)
+    test_case = LLMTestCase(
+        input=question,
+        actual_output=actual_output,
+        expected_output=expected_output
+    )
 
+    correctness_metric = GEval(
+        name="Correctness",
+        criteria="The expected output is the real Wikipedia page on a given topic, while the actual output is a "
+                 "potential Wikipedia page on the same topic: Your goal is to determine on a scale from 1 to 5 "
+                 "whether the actual output is a good Wikipedia page based on the expected output. You should put "
+                 "particular attention on the accuracy of the facts and data cited in the actual output with respect"
+                 "to the ones cited in the expected output.",
+        evaluation_params=[LLMTestCaseParams.INPUT, LLMTestCaseParams.ACTUAL_OUTPUT, LLMTestCaseParams.EXPECTED_OUTPUT],
+    )
 
-# SBERT metric
-"""
-all-MiniLM-L6-v2 is the model that will be used to calculate the SBERT metric over the generated text. 
-Unfortunately inputs longer that 256 tokens are truncated, so a sliding window function has to be implemented.  
-"""
+    correctness_metric.measure(test_case)
+    with open(to_be_evaluated, "a", encoding='utf-8') as file:
+        file.write(f"GEval correctness score: {correctness_metric.score}\n"
+                   f"Reason: {correctness_metric.reason}")
 
+    # Report the GEval score also in a .csv that will be used for statistical analysis
+    with open(csv_path, 'a+', newline='', encoding='utf-8') as file:
+        # Move the cursor to the beginning to read any existing content
+        file.seek(0)
+        reader = csv.reader(file)
+        rows = list(reader)  # Read existing rows (if any)
 
-def sliding_window(text, window_size=256, step_size=128):
-    tokenizer = AutoTokenizer.from_pretrained('sentence-transformers/all-mpnet-base-v2')
-    tokens = tokenizer.tokenize(text)
-    chunks = []
-    for start in range(0, len(tokens), step_size):
-        end = min(start + window_size, len(tokens))
-        chunk = tokenizer.convert_tokens_to_string(tokens[start:end])
-        chunks.append(chunk)
-        if end == len(tokens):
-            break
-    return chunks
+        # Check if the file is empty, and if necessary, write the header
+        if not rows:
+            writer = csv.writer(file)
+            writer.writerow(["Topic", "GEval score"])  # Example headers
 
-
-def calculate_sbert(candidate_path, reference_path):
-    with open(candidate_path, 'r', encoding='utf-8') as file:
-        candidate = file.read()
-
-    with open(reference_path, 'r', encoding='utf-8') as file:
-        reference = file.read()
-
-    model = SentenceTransformer('sentence-transformers/all-mpnet-base-v2')
-
-    chunks_candidate = sliding_window(candidate)
-    chunks_reference = sliding_window(reference)
-    embeddings_candidate = model.encode(chunks_candidate, convert_to_tensor=True)
-    embeddings_reference = model.encode(chunks_reference, convert_to_tensor=True)
-
-    similarity_matrix = cosine_similarity(embeddings_candidate, embeddings_reference)
-    mean_similarity = similarity_matrix.mean()
-
-    with open(candidate_path, 'a', encoding='utf-8') as file:
-        file.write(f"\n\n## Evaluation\n\nMean SBERT cosine similarity: {mean_similarity:}")
-
-    candidate_path = Path(candidate_path)
-    stem = candidate_path.stem
-    suffix = candidate_path.suffix
-
-    new_name = f"{stem}[evaluated]{suffix}"
-    new_path = candidate_path.with_name(new_name)
-
-    candidate_path.rename(new_path)
+        # Add new rows
+        writer = csv.writer(file)
+        writer.writerow([keyword, correctness_metric.score])
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Calculate SBERT similarity between the generated text "
-                                                 "and a reference text.")
-    parser.add_argument("--candidate", required=True, help="Path to the candidate file")
-    parser.add_argument("--reference", required=True, help="Path to the reference file")
+    parser = argparse.ArgumentParser(description="Estimate the quality of the generated text through GEval metric.")
+    parser.add_argument("--question", required=True, help="Question that the RAG system has to answer")
+    parser.add_argument("--to_be_evaluated", required=True, help="Path to the generated file")
+    parser.add_argument("--reference_text", required=True, help="Path to the reference file")
+    parser.add_argument("--keyword", required=True, help="Entry for the CSV row in which the score will be stored."
+                                                         "It's the same keyword that was used to retrieve the sources for the RAG")
+    parser.add_argument("--csv_path", required=True, help="Path to the CSV file in which the scores are stored")
 
     args = parser.parse_args()
 
-    calculate_sbert(args.candidate, args.reference)
+    calculate_geval_correctness(args.question, args.to_be_evaluated, args.reference_text, args.keyword, args.csv_path)

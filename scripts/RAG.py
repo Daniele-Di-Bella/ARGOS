@@ -101,13 +101,13 @@ def main(input_dir, output_dir, question, llm_model, embeddings_model, vector_st
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Generate a Wikipedia page from documents in a folder.")
-    parser.add_argument("--input_dir", required=True, help="Path to the folder containing documents.")
-    parser.add_argument("--output_dir", required=True, help="Path to the output folder.")
-    parser.add_argument("--question", required=True, help="Question to answer.")
-    parser.add_argument("--llm_model", default="gpt-4o-mini", help="LLM model to use.")
-    parser.add_argument("--embeddings_model", default="text-embedding-3-large", help="Embeddings model to use.")
-    parser.add_argument("--vector_store_type", default="InMemory", help="Type of vector store to use.")
+    parser = argparse.ArgumentParser(description="Generates a Wikipedia page from documents in a folder")
+    parser.add_argument("--input_dir", required=True, help="Path to the folder containing documents")
+    parser.add_argument("--output_dir", required=True, help="Path to the output folder")
+    parser.add_argument("--question", required=True, help="Question that the RAG system has to answer")
+    parser.add_argument("--llm_model", default="gpt-4o-mini", help="LLM model to use")
+    parser.add_argument("--embeddings_model", default="text-embedding-3-large", help="Embeddings model to use")
+    parser.add_argument("--vector_store_type", default="InMemory", help="Type of vector store to use")
     args = parser.parse_args()
 
     main(args.input_dir, args.output_dir, args.question, args.llm_model, args.embeddings_model, args.vector_store_type)

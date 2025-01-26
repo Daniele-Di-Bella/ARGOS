@@ -11,7 +11,7 @@ question = config["question"]
 
 rule all:
     input:
-        f"outputs/{sanitize_filename(question)}[evaluated].md"  # final pipeline file
+        f"outputs/{sanitize_filename(question)}.md"  # final pipeline file
 
 
 rule zotero_retrieval:
@@ -63,14 +63,20 @@ rule RAG:
 
 rule evaluation:
     input:
-        candidate=rules.RAG.output,
-        reference="outputs/reference_text.md"
+        question=question,
+        to_be_evaluated=rules.RAG.output,
+        reference_text=f"outputs/{keywords}_RT.md",
+        keyword=keywords,
+        csv_path="evaluation.csv"
     output:
-        f"outputs/{sanitize_filename(question)}[evaluated].md"
+        f"outputs/{sanitize_filename(question)}.md"
     run:
         command = (
          f'python scripts/evaluation.py '
-         f'--candidate "{input.candidate}" '
-         f'--reference "{input.reference}" '
+         f'--question "{input.question}" '
+         f'--to_be_evaluated "{input.to_be_evaluated}" '
+         f'--reference_text "{input.reference_text}" '
+         f'--keyword "{input.keyword}" '
+         f'--csv_path "{input.csv_path}" '
         )
         shell(command)
