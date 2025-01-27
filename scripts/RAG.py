@@ -35,14 +35,28 @@ def load_documents_from_folder(folder_path: str):
     return documents
 
 
-def save_response_to_file(output_dir, question, answer):
+def sanitize_filename(question):
+    sanitized_name = "".join(c if c.isalnum() or c in "_-" else "_" for c in question).strip()
+    return sanitized_name + ".md"
+
+
+def save_response_to_file(output_dir, question, answer, retrieved_docs: list):
     output_dir = Path(output_dir)
     output_dir.mkdir(exist_ok=True)
-    sanitized_filename = "".join(c if c.isalnum() or c in " _-" else "_" for c in question) + ".md"
+    sanitized_filename = sanitize_filename(question)
     file_path = output_dir / sanitized_filename
+
     with open(file_path, "w", encoding="utf-8") as file:
         file.write(f"# Wikipedia page\n{answer}")
-    print(f"Response saved to {file_path}")
+
+        # Add References section
+        file.write("\n\n## References\n")
+        file.write(f"Chunks retrieved: {len(retrieved_docs)}\n\n")
+
+        for i, doc in enumerate(retrieved_docs):
+            file.write(f"Source of chunk {i + 1}: {doc.metadata['source']}\n")
+            file.write(f"Content: {doc.page_content[:300]} [...] \n\n")  # Get only the first 300 characters to avoid overly long content.
+
     return str(file_path)
 
 
@@ -82,7 +96,7 @@ def main(input_dir, output_dir, question, llm_model, embeddings_model, vector_st
         message_for_llm = prompt.invoke(
             {"target_audience": "Biologists and people with a degree in medicine.", "context": docs_content})
         response = llm.invoke(message_for_llm)
-        file_path = save_response_to_file(output_dir, state["question"], response.content)
+        file_path = save_response_to_file(output_dir, state["question"], response.content, state["context"])
         return {"answer": response.content, "output_path": file_path}
 
     graph_builder = StateGraph(State).add_sequence([retrieve, generate])

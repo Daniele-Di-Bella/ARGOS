@@ -1,8 +1,10 @@
+import os
 from pathlib import Path
 from scripts.API_keys import TDarkRAG_Zotero_API_key, Zotero_library_ID
 
 def sanitize_filename(question):
-    return "".join(c if c.isalnum() or c in " _-" else "_" for c in question).strip()
+    sanitized_name = "".join(c if c.isalnum() or c in "_-" else "_" for c in question).strip()
+    return sanitized_name + ".md"
 
 
 keywords = config["keywords"]
@@ -11,7 +13,7 @@ question = config["question"]
 
 rule all:
     input:
-        f"outputs/{keywords}/{sanitize_filename(question)}.md"  # final pipeline file
+        f"outputs/{keywords}/[Eval]{sanitize_filename(question)}.md"  # final pipeline file
 
 
 rule zotero_retrieval:
@@ -60,23 +62,26 @@ rule RAG:
         )
         shell(command)
 
+        assert os.path.exists(output[0]), f"Output file {output[0]} was not created!"
+
 
 rule evaluation:
     input:
-        question=question,
         to_be_evaluated=rules.RAG.output,
         reference_text=f"outputs/{keywords}/{keywords}_RT.md",
+    params:
+        question = question,
         keyword=keywords,
-        csv_path="evaluation.csv"
+        csv_YN="yes"
     output:
-        rules.RAG.output  # overwrites RAG's output
+        f"outputs/{keywords}/[Eval]{sanitize_filename(question)}.md"
     run:
         command = (
          f'python scripts/evaluation.py '
-         f'--question "{input.question}" '
+         f'--question "{params.question}" '
          f'--to_be_evaluated "{input.to_be_evaluated}" '
          f'--reference_text "{input.reference_text}" '
-         f'--keyword "{input.keyword}" '
-         f'--csv_path "{input.csv_path}" '
+         f'--keyword "{params.keyword}" '
+         f'--csv_path "{params.csv_YN}" '
         )
         shell(command)
