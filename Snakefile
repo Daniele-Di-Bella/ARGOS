@@ -9,11 +9,13 @@ def sanitize_filename(question):
 
 keywords = config["keywords"]
 question = config["question"]
+vector_store_type = config["vector_store_type"]
+k_chunks = config["k_chunks"]
 
 
 rule all:
     input:
-        f"outputs/{keywords}/[Eval]{sanitize_filename(question)}.md"  # final pipeline file
+        f"outputs/{keywords}/{sanitize_filename(question).removesuffix('.md')}[Eval].md"  # final pipeline file
 
 
 rule zotero_retrieval:
@@ -47,9 +49,10 @@ rule RAG:
         question=question,  # The question to be answered
         llm_model="gpt-4o-mini",
         embeddings_model="text-embedding-3-large",
-        vector_store_type="InMemory"
+        vector_store_type=vector_store_type,
+        k_chunks=k_chunks
     output:
-        f"outputs/{keywords}/{sanitize_filename(question)}.md"
+        f"outputs/{keywords}/{sanitize_filename(question)}"
     run:
         command = (
             f'python scripts/RAG.py '
@@ -58,7 +61,8 @@ rule RAG:
             f'--question "{params.question}" '
             f'--llm_model {{params.llm_model}} '
             f'--embeddings_model {{params.embeddings_model}} '
-            f'--vector_store_type {{params.vector_store_type}}'
+            f'--vector_store_type "{params.vector_store_type}" '
+            f'--k_chunks {{params.k_chunks}}'
         )
         shell(command)
 
@@ -68,13 +72,13 @@ rule RAG:
 rule evaluation:
     input:
         to_be_evaluated=rules.RAG.output,
-        reference_text=f"outputs/{keywords}/{keywords}_RT.md",
+        reference_text=f"outputs/{keywords}/{keywords}_RT.md"
     params:
         question = question,
         keyword=keywords,
-        csv_YN="yes"
+        csv_YN=True
     output:
-        f"outputs/{keywords}/[Eval]{sanitize_filename(question)}.md"
+        f"outputs/{keywords}/{sanitize_filename(question).removesuffix('.md')}[Eval].md"
     run:
         command = (
          f'python scripts/evaluation.py '
@@ -82,6 +86,6 @@ rule evaluation:
          f'--to_be_evaluated "{input.to_be_evaluated}" '
          f'--reference_text "{input.reference_text}" '
          f'--keyword "{params.keyword}" '
-         f'--csv_path "{params.csv_YN}" '
+         f'--csv_YN "{params.csv_YN}" '
         )
         shell(command)

@@ -9,3 +9,5 @@ data/
 scripts/pubmed_scraper.py
 outputs/
 .snakemake
+evaluation.csv
+.deepeval_telemtry.txt

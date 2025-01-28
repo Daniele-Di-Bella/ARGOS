@@ -5,6 +5,7 @@ from langchain import hub
 from langchain_community.document_loaders import PyPDFLoader, UnstructuredHTMLLoader
 from langchain_core.documents import Document
 from langchain_core.vectorstores import InMemoryVectorStore
+from langchain_community.vectorstores import FAISS
 from langchain_openai import ChatOpenAI
 from langchain_openai import OpenAIEmbeddings
 from langchain_text_splitters import RecursiveCharacterTextSplitter
@@ -35,6 +36,16 @@ def load_documents_from_folder(folder_path: str):
     return documents
 
 
+def deduplicate_chunks(chunks):
+    seen = set()
+    unique_chunks = []
+    for chunk in chunks:
+        if chunk.page_content not in seen:
+            seen.add(chunk.page_content)
+            unique_chunks.append(chunk)
+    return unique_chunks
+
+
 def sanitize_filename(question):
     sanitized_name = "".join(c if c.isalnum() or c in "_-" else "_" for c in question).strip()
     return sanitized_name + ".md"
@@ -54,28 +65,39 @@ def save_response_to_file(output_dir, question, answer, retrieved_docs: list):
         file.write(f"Chunks retrieved: {len(retrieved_docs)}\n\n")
 
         for i, doc in enumerate(retrieved_docs):
-            file.write(f"Source of chunk {i + 1}: {doc.metadata['source']}\n")
-            file.write(f"Content: {doc.page_content[:300]} [...] \n\n")  # Get only the first 300 characters to avoid overly long content.
+            file.write(f"Source of chunk {i + 1}: {doc.metadata['source']}<br>"
+                       f"Content: {doc.page_content[:300]} [...] \n\n")  # Get only the first 300 characters to avoid overly long content.
 
     return str(file_path)
 
 
-def main(input_dir, output_dir, question, llm_model, embeddings_model, vector_store_type="InMemory"):
+def main(input_dir,
+         output_dir,
+         question,
+         llm_model,
+         embeddings_model,
+         k_chunks: int,
+         vector_store_type="InMemory"
+         ):
     # LLM and embedding models to be used
     llm = ChatOpenAI(model=llm_model)
     embeddings = OpenAIEmbeddings(model=embeddings_model)
 
-    # Define the type of the vector store
-    if vector_store_type == "InMemory":
-        vector_store = InMemoryVectorStore(embeddings)
-    else:
-        raise ValueError(f"Unknown vector store type: {vector_store_type}")
-
+    # Splitting and loading the docs
     docs_path = Path(input_dir)
     all_documents = load_documents_from_folder(docs_path)
 
-    text_splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=200, add_start_index=True)
+    text_splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=50, add_start_index=True)
     all_splits = text_splitter.split_documents(all_documents)
+
+    # Define the type of the vector store
+    if vector_store_type == "InMemory":
+        vector_store = InMemoryVectorStore(embeddings)
+    elif vector_store_type == "FAISS":
+        vector_store = FAISS.from_documents(all_splits, embeddings)
+    else:
+        raise ValueError(f"Unknown vector store type: {vector_store_type}")
+
     vector_store.add_documents(documents=all_splits)
 
     prompt = hub.pull("tdarkrag-wikipedia-page-generation")
@@ -86,8 +108,17 @@ def main(input_dir, output_dir, question, llm_model, embeddings_model, vector_st
         answer: str
 
     def retrieve(state: State):
-        retriever = vector_store.as_retriever(searh_type="similarity", k=100)
-        retrieved_docs = retriever.get_relevant_documents(state["question"])
+        if vector_store_type == "InMemory":
+            retriever = vector_store.as_retriever(searh_type="similarity", search_kwargs={"k": k_chunks})
+            retrieved_docs = retriever.invoke(state["question"])
+
+        if vector_store_type == "FAISS":
+            retriever = vector_store.as_retriever(search_type="similarity_score_threshold",
+                                                  search_kwargs={"score_threshold": 0.0,
+                                                                 "k": k_chunks})
+            retrieved_docs = retriever.invoke(state["question"])
+
+        retrieved_docs = deduplicate_chunks(retrieved_docs)
         return {"context": retrieved_docs}
 
     def generate(state: State):
@@ -122,6 +153,15 @@ if __name__ == "__main__":
     parser.add_argument("--llm_model", default="gpt-4o-mini", help="LLM model to use")
     parser.add_argument("--embeddings_model", default="text-embedding-3-large", help="Embeddings model to use")
     parser.add_argument("--vector_store_type", default="InMemory", help="Type of vector store to use")
+    parser.add_argument("--k_chunks", help="How many chunks shall be kept to answer the user's query")
+
     args = parser.parse_args()
 
-    main(args.input_dir, args.output_dir, args.question, args.llm_model, args.embeddings_model, args.vector_store_type)
+    main(args.input_dir,
+         args.output_dir,
+         args.question,
+         args.llm_model,
+         args.embeddings_model,
+         int(args.k_chunks),  # if this is not passed as an integer an error will rise: better be sure
+         args.vector_store_type
+         )
