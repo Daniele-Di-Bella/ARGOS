@@ -9,5 +9,5 @@ data/
 scripts/pubmed_scraper.py
 outputs/
 .snakemake
-outputs/first tests on UGGT/evaluation.csv
+outputs/first tests/evaluation.csv
 .deepeval_telemtry.txt

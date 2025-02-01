@@ -125,7 +125,9 @@ def main(input_dir,
         docs_content = "\n\n".join(
             f"source: {doc.metadata['source']}\nchunk: {doc.page_content}" for doc in state["context"])
         message_for_llm = prompt.invoke(
-            {"target_audience": "Biologists and people with a degree in medicine.", "context": docs_content})
+            {"target_audience": "Biologists and people with a degree in medicine.",
+             "number_of_sources": len(all_documents),
+             "context": docs_content})
         response = llm.invoke(message_for_llm)
         file_path = save_response_to_file(output_dir, state["question"], response.content, state["context"])
         return {"answer": response.content, "output_path": file_path}
