@@ -11,3 +11,5 @@ outputs/
 .snakemake
 outputs/first tests/evaluation.csv
 .deepeval_telemtry.txt
+.deepeval_telemetry.txt
+evaluation.csv
