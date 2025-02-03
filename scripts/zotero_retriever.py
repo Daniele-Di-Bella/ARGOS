@@ -107,7 +107,14 @@ def copy_zotero_files(
     subdir_not_found = 0
 
     # Iterate over subdirectories to check
+    checked_subdirs = set()
+
     for subdir in subdirs_to_check:
+        if subdir[0] in checked_subdirs:
+            continue  # Skip already processed items
+
+        checked_subdirs.add(subdir[0])  # Mark as processed
+
         subdir_path = zotero_storage_dir / Path(subdir[0])  # / is a Path's combination operator
         # remember that subdir is a (key, title) tuple, and the name of the subdir correspond to the first
         # element of this tuple
