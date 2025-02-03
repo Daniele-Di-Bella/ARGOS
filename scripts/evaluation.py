@@ -22,6 +22,7 @@ def calculate_geval_correctness(question: str, to_be_evaluated: str, reference_t
         # split("References") splits the content into a list of strings, separating the text at the first occurrence of "References".
         # [0] takes the part before the "References" section.
         # strip() removes any leading and trailing whitespace from the text.
+        actual_output = actual_output.split("## Answer")[1].strip()
 
     with open(reference_text, 'r', encoding='utf-8') as file:
         expected_output = file.read()

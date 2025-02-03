@@ -58,7 +58,7 @@ def save_response_to_file(output_dir, question, answer, retrieved_docs: list):
     file_path = output_dir / sanitized_filename
 
     with open(file_path, "w", encoding="utf-8") as file:
-        file.write(f"# Wikipedia page\n{answer}")
+        file.write(f"## Question\n{question}\n## Answer\n{answer}")
 
         # Add References section
         file.write("\n\n## References\n")
