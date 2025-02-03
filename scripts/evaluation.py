@@ -15,7 +15,12 @@ os.environ["LANGCHAIN_PROJECT"] = LANGCHAIN_PROJECT
 
 
 # GEval metric
-def calculate_geval_correctness(question: str, to_be_evaluated: str, reference_text: str, keyword: str, csv_YN: bool):
+def calculate_geval_correctness(question: str,
+                                to_be_evaluated: str,
+                                reference_text: str,
+                                keyword: str,
+                                k_chunks: int,
+                                csv_YN: bool):
     with open(to_be_evaluated, 'r', encoding='utf-8') as file:
         actual_output = file.read().split("## References")[0].strip()
         # file.read() reads the entire content of the file as a single string.
@@ -80,11 +85,11 @@ def calculate_geval_correctness(question: str, to_be_evaluated: str, reference_t
             # Check if the file is empty, and if necessary, write the header
             if not rows:
                 writer = csv.writer(file)
-                writer.writerow(["Topic", "GEval 4o score", "GEval 4o-mini score"])
+                writer.writerow(["Topic", "k_chunks" "GEval 4o score", "GEval 4o-mini score"])
 
             # Add new rows
             writer = csv.writer(file)
-            writer.writerow([keyword, correctness_metric_4o.score, correctness_metric_4o_mini.score])
+            writer.writerow([keyword, k_chunks, correctness_metric_4o.score, correctness_metric_4o_mini.score])
 
 
 if __name__ == "__main__":
@@ -94,8 +99,9 @@ if __name__ == "__main__":
     parser.add_argument("--reference_text", required=True, help="Path to the reference file")
     parser.add_argument("--keyword", required=True, help="Entry for the CSV row in which the score will be stored."
                                                          "It's the same keyword that was used to retrieve the sources for the RAG")
+    parser.add_argument("--k_chunks", help="How many chunks shall be kept to answer the user's query")
     parser.add_argument("--csv_YN", required=True, help="The scores will be stored in a csv? Y/N")
 
     args = parser.parse_args()
 
-    calculate_geval_correctness(args.question, args.to_be_evaluated, args.reference_text, args.keyword, args.csv_YN)
+    calculate_geval_correctness(args.question, args.to_be_evaluated, args.reference_text, args.keyword, args.k_chunks, args.csv_YN)

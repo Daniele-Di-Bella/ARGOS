@@ -15,7 +15,7 @@ k_chunks = config["k_chunks"]
 
 rule all:
     input:
-        f"outputs/{keywords}/{sanitize_filename(question).removesuffix('.md')}[Eval].md"  # final pipeline file
+        f"outputs/{keywords}/{sanitize_filename(question[:50]).removesuffix('.md')}[Eval].md"  # final pipeline file
 
 
 rule zotero_retrieval:
@@ -52,7 +52,7 @@ rule RAG:
         vector_store_type=vector_store_type,
         k_chunks=k_chunks
     output:
-        f"outputs/{keywords}/{sanitize_filename(question)}"
+        f"outputs/{keywords}/{sanitize_filename(question[:50])}"
     run:
         command = (
             f'python scripts/RAG.py '
@@ -76,9 +76,10 @@ rule evaluation:
     params:
         question = question,
         keyword=keywords,
+        k_chunks=k_chunks,
         csv_YN=True
     output:
-        f"outputs/{keywords}/{sanitize_filename(question).removesuffix('.md')}[Eval].md"
+        f"outputs/{keywords}/{sanitize_filename(question[:50]).removesuffix('.md')}[Eval].md"
     run:
         command = (
          f'python scripts/evaluation.py '
@@ -86,6 +87,7 @@ rule evaluation:
          f'--to_be_evaluated "{input.to_be_evaluated}" '
          f'--reference_text "{input.reference_text}" '
          f'--keyword "{params.keyword}" '
+         f'--k_chunks "{params.k_chunks}" '
          f'--csv_YN "{params.csv_YN}" '
         )
         shell(command)

@@ -54,7 +54,7 @@ def sanitize_filename(question):
 def save_response_to_file(output_dir, question, answer, retrieved_docs: list):
     output_dir = Path(output_dir)
     output_dir.mkdir(exist_ok=True)
-    sanitized_filename = sanitize_filename(question)
+    sanitized_filename = sanitize_filename(question[:50])
     file_path = output_dir / sanitized_filename
 
     with open(file_path, "w", encoding="utf-8") as file:
