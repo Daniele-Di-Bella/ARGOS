@@ -12,3 +12,4 @@ tests/outputs/first tests/evaluation.csv
 .deepeval_telemetry.txt
 tests/data/
 tests/outputs/
+.gitattributes
