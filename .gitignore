@@ -10,3 +10,5 @@ scripts/pubmed_scraper.py
 tests/outputs/first tests/evaluation.csv
 .deepeval_telemtry.txt
 .deepeval_telemetry.txt
+tests/data/
+tests/outputs/
