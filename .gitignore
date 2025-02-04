@@ -5,11 +5,8 @@ data-collection/storage
 *.pyc
 scripts/API_keys.py
 pyzotero-local/
-data/
 scripts/pubmed_scraper.py
-outputs/
 .snakemake
-outputs/first tests/evaluation.csv
+tests/outputs/first tests/evaluation.csv
 .deepeval_telemtry.txt
 .deepeval_telemetry.txt
-evaluation.csv
