@@ -9,6 +9,7 @@ def sanitize_filename(question):
 
 keywords = config["keywords"]
 question = config["question"]
+model = config["model"]
 vector_store_type = config["vector_store_type"]
 k_chunks = config["k_chunks"]
 
@@ -47,7 +48,7 @@ rule RAG:
         output_dir=f"outputs/{keywords}"  # Path to output folder
     params:
         question=question,  # The question to be answered
-        llm_model="gpt-4o-mini",
+        llm_model=model,
         embeddings_model="text-embedding-3-large",
         vector_store_type=vector_store_type,
         k_chunks=k_chunks
@@ -59,7 +60,7 @@ rule RAG:
             f'--input_dir {{input.input_dir}} '
             f'--output_dir {{input.output_dir}} '
             f'--question "{params.question}" '
-            f'--llm_model {{params.llm_model}} '
+            f'--llm_model "{params.llm_model}" '
             f'--embeddings_model {{params.embeddings_model}} '
             f'--vector_store_type "{params.vector_store_type}" '
             f'--k_chunks {{params.k_chunks}}'

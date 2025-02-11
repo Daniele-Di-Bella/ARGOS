@@ -7,6 +7,8 @@ from langchain_core.documents import Document
 from langchain_core.vectorstores import InMemoryVectorStore
 from langchain_community.vectorstores import FAISS
 from langchain_openai import ChatOpenAI
+from langchain_anthropic import ChatAnthropic
+from langchain_deepseek import ChatDeepSeek
 from langchain_openai import OpenAIEmbeddings
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langgraph.graph import START, StateGraph
@@ -80,7 +82,13 @@ def main(input_dir,
          vector_store_type="InMemory"
          ):
     # LLM and embedding models to be used
-    llm = ChatOpenAI(model=llm_model)
+    if "gpt" in llm_model:
+        llm = ChatOpenAI(model=llm_model)
+    if "claude" in llm_model:
+        llm = ChatAnthropic(model=llm_model)
+    if "deepseek" in llm_model:
+        llm = ChatDeepSeek(model=llm_model)
+
     embeddings = OpenAIEmbeddings(model=embeddings_model)
 
     # Splitting and loading the docs
