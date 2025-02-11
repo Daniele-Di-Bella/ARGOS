@@ -77,6 +77,7 @@ rule evaluation:
     params:
         question = question,
         keyword=keywords,
+        model=model,
         k_chunks=k_chunks,
         csv_YN=True
     output:
@@ -88,6 +89,7 @@ rule evaluation:
          f'--to_be_evaluated "{input.to_be_evaluated}" '
          f'--reference_text "{input.reference_text}" '
          f'--keyword "{params.keyword}" '
+         f'--model "{params.model}" '
          f'--k_chunks "{params.k_chunks}" '
          f'--csv_YN "{params.csv_YN}" '
         )
