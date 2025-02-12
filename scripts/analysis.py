@@ -44,27 +44,12 @@ def plot_boxplots(df, save=False, k_chunks_filter="all"):
         save (bool): Whether to save the plot or just display it.
         k_chunks_filter (str): Filter by k_chunks value (e.g., "50", "100", or "all").
     """
-    # Convert k_chunks_filter to integer if it's not "all"
-    if k_chunks_filter.lower() != "all":
-        df = df[df["k_chunks"] == int(k_chunks_filter)]
-
-    # Plot only if the filtered DataFrame is not empty
-    if df.empty:
-        print(f"No data available for k_chunks = {k_chunks_filter}")
-        return
-
     plt.figure(figsize=(5, 5))
 
     # First boxplot (GEval 4o score)
-    plt.subplot(1, 2, 1)
-    sns.boxplot(y=df["GEval 4o score"], fill=False)
-    plt.title(f"GEval GPT-4o score (k_chunks = {k_chunks_filter})")
-    plt.ylabel("GEval score")
-
-    # Second boxplot (GEval 4o-mini score)
-    plt.subplot(1, 2, 2)
-    sns.boxplot(y=df["GEval 4o-mini score"], palette="Set2", fill=False)
-    plt.title(f"GEval GPT-4o-mini score (k_chunks = {k_chunks_filter})")
+    plt.subplot(1, 1, 1)
+    sns.boxplot(x=df["Model"], y=df["GEval 4o score"], hue=df["k_chunks"], fill=False)
+    plt.title(f"GEval GPT-4o score")
     plt.ylabel("GEval score")
 
     # Adjust layout
@@ -86,8 +71,6 @@ def main():
                         help="Generate boxplots (optionally save them)")
     parser.add_argument("--abbreviation", action="store_true", help="Generate protein abbreviations")
     parser.add_argument("--df_filename", help="The name (with suffix) of the .csv file to analyze")
-    parser.add_argument("--k_chunks", type=str, default="all",
-                        help="Filter DataFrame by k_chunks value (50, 100, or all)")
 
     args = parser.parse_args()
 
