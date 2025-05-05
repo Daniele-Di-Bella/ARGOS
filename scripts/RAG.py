@@ -108,7 +108,7 @@ def main(input_dir,
 
     vector_store.add_documents(documents=all_splits)
 
-    prompt = hub.pull("tdarkrag-wikipedia-page-generation")
+    prompt = hub.pull("ped-rag")
 
     class State(TypedDict):
         question: str
@@ -133,7 +133,7 @@ def main(input_dir,
         docs_content = "\n\n".join(
             f"source: {doc.metadata['source']}\nchunk: {doc.page_content}" for doc in state["context"])
         message_for_llm = prompt.invoke(
-            {"target_audience": "Biologists and people with a degree in medicine.",
+            {"target_audience": "Pedagogisti ed esperti dell'educazione",
              "number_of_sources": len(all_documents),
              "context": docs_content})
         response = llm.invoke(message_for_llm)

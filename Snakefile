@@ -16,7 +16,7 @@ k_chunks = config["k_chunks"]
 
 rule all:
     input:
-        f"outputs/{keywords}/{sanitize_filename(question[:50]).removesuffix('.md')}[Eval].md"  # final pipeline file
+        f"outputs/{keywords}/{sanitize_filename(question[:50]).removesuffix('.md')}.md"  # final pipeline file
 
 
 rule zotero_retrieval:

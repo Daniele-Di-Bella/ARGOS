@@ -1,15 +1,25 @@
+# IDE / Editor configurations
 .idea/
-.pytest_cache/
-data-collection/storage
+.gitattributes
+
+# Python caches and compiled files
 **/__pycache__/
 *.pyc
-scripts/API_keys.py
-pyzotero-local/
-scripts/pubmed_scraper.py
+.pytest_cache/
+
+# Workflow and job management
 .snakemake
-tests/outputs/first tests/evaluation.csv
-.deepeval_telemtry.txt
-.deepeval_telemetry.txt
-tests/data/
-tests/outputs/
-.gitattributes
+.deepeval*
+
+# Project-specific files and folders
+data/
+data-collection/storage
+outputs/
+pyzotero-local/
+
+# Sensitive or temporary scripts
+scripts/API_keys.py
+scripts/pubmed_scraper.py
+
+# Tests and test outputs
+tests/
