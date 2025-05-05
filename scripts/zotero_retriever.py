@@ -1,3 +1,26 @@
+"""
+Module for interacting with a user's Zotero library to retrieve items and copy associated files.
+
+The module performs the following operations:
+1. It uses the `pyzotero` library to interact with the Zotero API and extract metadata for items
+   in the user's library that match the specified keywords.
+2. It sanitizes filenames to avoid issues with invalid characters.
+3. It copies files from a Zotero library's local storage to a designated directory on the local machine
+   based on the metadata retrieved, using the specified file extensions.
+
+Functions in this module include:
+- `extract_zotero_items_keys`: Retrieves items from a Zotero library based on specified keywords and library details.
+- `sanitize_filename`: Sanitizes filenames by removing or replacing invalid characters for file names on Windows.
+- `copy_zotero_files`: Copies relevant files from Zotero's local storage to a user-specified directory.
+
+The script is designed to be run from the command line and provides options for specifying the Zotero API
+key, library ID, keywords for filtering, and other configurations such as file extensions.
+
+Usage:
+    python script.py --tdarkrag_zotero_api_key <API_KEY> --zotero_library_id <LIBRARY_ID> --keywords <KEYWORDS>
+                     --zotero_storage_dir <STORAGE_DIR> --file_extensions <EXTENSIONS>
+"""
+
 import argparse
 import re
 import time

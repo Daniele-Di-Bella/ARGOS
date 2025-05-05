@@ -20,6 +20,7 @@ pyzotero-local/
 # Sensitive or temporary scripts
 scripts/API_keys.py
 scripts/pubmed_scraper.py
+scripts/analysis.py
 
 # Tests and test outputs
 tests/

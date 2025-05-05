@@ -1,3 +1,34 @@
+"""
+Module that provide functionality to generate responses to user queries
+by leveraging documents in a folder, using a combination of document loading,
+text splitting, vector storage, and large language models (LLMs).
+
+The main workflow is as follows:
+1. Load documents from a specified folder (supports PDFs and HTML).
+2. Split the documents into chunks for efficient retrieval.
+3. Use a vector store to index and retrieve relevant document chunks.
+4. Query a language model (LLM) to generate an answer to a given question.
+5. Save the question, answer, and references to an output file.
+
+The module supports different LLM models (e.g., OpenAI, Anthropic, DeepSeek)
+and vector store types (InMemory, FAISS). It integrates with LangChain
+to handle the document loading, vector search, and model invocation.
+
+Environment variables required:
+- OPENAI_API_KEY
+- LANGCHAIN_TRACING_V2
+- LANGCHAIN_ENDPOINT
+- LANGCHAIN_API_KEY
+- LANGCHAIN_PROJECT
+
+Functions:
+- `load_documents_from_folder`: Loads documents from a given folder.
+- `deduplicate_chunks`: Removes duplicate chunks based on content.
+- `sanitize_filename`: Sanitizes a string to use as a valid filename.
+- `save_response_to_file`: Saves the question, answer, and references to a file.
+- `main`: The main function that coordinates the document processing and querying.
+"""
+
 import argparse
 import os
 from pathlib import Path

@@ -1,3 +1,57 @@
+"""
+Snakemake workflow for running a Retrieval-Augmented Generation (RAG) pipeline using
+Zotero-sourced documents.
+
+This pipeline retrieves documents from a local Zotero library using specified
+keywords, generates answers to a user-defined question using a RAG model, and
+evaluates the generated answers by comparing them to reference answers.
+
+Steps:
+1. Zotero Retrieval:
+   Retrieves documents (PDF and HTML) from a local Zotero library based on
+   specified keywords. Zotero API credentials from `scripts/API_keys.py` are required.
+
+2. RAG Generation:
+   Uses a specified language model (LLM) to generate an answer to the user-defined
+   question based on the retrieved documents. The process involves embedding models
+   and a vector store for chunk-based retrieval.
+
+3. Evaluation:
+   Compares the generated answer to a reference answer using evaluation scripts,
+   outputting a markdown file with the results, and optionally a CSV file with
+   evaluation metrics.
+
+Configuration:
+    The workflow relies on the `config` dictionary, which should define the following keys:
+    - `keywords` (str): The search term for document retrieval and folder naming.
+    - `question` (str): The natural language question to answer.
+    - `model` (str): The LLM used for answer generation.
+    - `vector_store_type` (str): The type of vector store used for chunk indexing.
+    - `k_chunks` (int): The number of top chunks to retrieve.
+
+Inputs:
+    - Zotero library, fetched from a local storage path.
+    - API credentials from `scripts/API_keys.py`.
+    - Supporting Python scripts: `zotero_retriever.py`, `RAG.py`, `evaluation.py`.
+
+Outputs:
+    - Retrieved documents saved in `data/{keywords}/`.
+    - Answer markdown file saved in `outputs/{keywords}/`.
+    - Evaluation results saved as a markdown and optionally as a CSV file in `outputs/{keywords}/`.
+
+Requirements:
+    - Python 3.8+
+    - Snakemake
+    - Zotero with local storage
+    - Access to OpenAI or compatible LLM APIs
+
+Note:
+    This workflow is designed for use in a Windows environment (e.g., `C:\\Users\\...` paths).
+    For cross-platform compatibility, paths and shell invocations may need adjustment.
+
+Author: Daniele Di Bella (daniele.dibella99@gmail.com)
+"""
+
 import os
 from pathlib import Path
 from scripts.API_keys import TDarkRAG_Zotero_API_key, Zotero_library_ID

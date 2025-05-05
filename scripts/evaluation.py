@@ -1,3 +1,33 @@
+"""
+This module to evaluate the correctness of generated text using the GEval metric.
+
+It reads a generated file, compares it with a reference file, and evaluates the output
+based on its correctness in relation to the expected data. The evaluation uses two versions
+of the GEval metric (for different models: gpt-4o and gpt-4o-mini), focusing on the accuracy
+of the content and its alignment with the real Wikipedia page on a given topic.
+
+Key features of the module include:
+- Loading and reading generated text and reference text files.
+- Evaluating the generated text using the GEval metric for correctness.
+- Saving evaluation results in an annotated file and optionally in a CSV file for statistical analysis.
+- Storing API keys as environment variables for external systems such as OpenAI and LangChain.
+
+The module provides a command-line interface (CLI) to trigger the evaluation process and
+log the results, including the evaluation scores for each model.
+
+Attributes:
+    None
+
+Functions:
+    calculate_geval_correctness: Evaluates the correctness of generated text compared to a reference text
+                                  using GEval metrics for two models, saving the results in a file and an optional CSV.
+
+Usage:
+    To use this module via the command line, run the script with the required arguments:
+    python script_name.py --question "What is AI?" --to_be_evaluated "generated_file.md" --reference_text "reference_file.txt"
+                          --keyword "ai" --model "gpt-4o" --k_chunks 5 --csv_YN Y
+"""
+
 import argparse
 import csv
 import os
