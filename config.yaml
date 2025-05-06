@@ -1,0 +1,9 @@
+keywords: "TMEM138"
+question: "Write a text that explains what is TMEM138, to which genes it is related, which are its structure 
+and function (even if both supposed), where it is located in the cell and with which other proteins it interacts
+mostly."
+model: "gpt-4.1"
+vector_store_type: "FAISS"  # InMemory or FAISS
+k_chunks: 50  # An int shall be passed
+language: "English"
+target_audience: "Wikipedia users interested in biology, with or without background in life sciences"

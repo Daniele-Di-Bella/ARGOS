@@ -142,7 +142,7 @@ def main(input_dir,
 
     vector_store.add_documents(documents=all_splits)
 
-    prompt = hub.pull("ped-rag")
+    prompt = hub.pull("tdark-proteins")
 
     class State(TypedDict):
         question: str
