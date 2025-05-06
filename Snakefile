@@ -117,7 +117,7 @@ rule RAG:
         command = (
             f'python scripts/RAG.py '
             f'--input_dir {{input.input_dir}} '
-            f'--output_dir {{output[0].parent}} '  # Derive output_dir from the output file's parent
+            f'--output_dir outputs/"{params.keywords}" '  
             f'--keywords "{params.keywords}" '
             f'--language "{params.language}" '
             f'--target_audience "{params.target_audience}" '
@@ -129,7 +129,7 @@ rule RAG:
         )
         shell(command)
 
-        assert os.path.exists(output[0]), f"Output file {output[0]} was not created!"
+        assert os.path.exists(f"outputs/{params.keywords}"), f"Output file outputs/{params.keywords} was not created!"
 
 
 rule evaluation:
