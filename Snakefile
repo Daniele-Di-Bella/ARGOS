@@ -62,6 +62,8 @@ def sanitize_filename(question):
 
 
 keywords = config["keywords"]
+language = config["language"]
+target_audience= config["target_audience"]
 question = config["question"]
 model = config["model"]
 vector_store_type = config["vector_store_type"]
@@ -101,6 +103,9 @@ rule RAG:
         input_dir=f"data/{keywords}/",  # Path to the folder containing the documents
         output_dir=f"outputs/{keywords}"  # Path to output folder
     params:
+        keywords=keywords,
+        language=language,
+        target_audience=target_audience,
         question=question,  # The question to be answered
         llm_model=model,
         embeddings_model="text-embedding-3-large",

@@ -106,6 +106,9 @@ def save_response_to_file(output_dir, question, answer, retrieved_docs: list):
 
 def main(input_dir,
          output_dir,
+         keywords,
+         language,
+         target_audience,
          question,
          llm_model,
          embeddings_model,
@@ -164,8 +167,9 @@ def main(input_dir,
         docs_content = "\n\n".join(
             f"source: {doc.metadata['source']}\nchunk: {doc.page_content}" for doc in state["context"])
         message_for_llm = prompt.invoke(
-            {"target_audience": "Pedagogisti ed esperti dell'educazione",
-             "number_of_sources": len(all_documents),
+            {"keywords": keywords,
+             "language": language,
+             "target_audience": target_audience,
              "context": docs_content})
         response = llm.invoke(message_for_llm)
         file_path = save_response_to_file(output_dir, state["question"], response.content, state["context"])
@@ -190,6 +194,9 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Generates a Wikipedia page from documents in a folder")
     parser.add_argument("--input_dir", required=True, help="Path to the folder containing documents")
     parser.add_argument("--output_dir", required=True, help="Path to the output folder")
+    parser.add_argument("--keywords", required=True, help="Keywords parameter for prompt formation")
+    parser.add_argument("--language", required=True, help="Language parameter for prompt formation")
+    parser.add_argument("--target_audience", required=True, help="Target audience parameter to the output folder")
     parser.add_argument("--question", required=True, help="Question that the RAG system has to answer")
     parser.add_argument("--llm_model", default="gpt-4o-mini", help="LLM model to use")
     parser.add_argument("--embeddings_model", default="text-embedding-3-large", help="Embeddings model to use")
@@ -200,6 +207,9 @@ if __name__ == "__main__":
 
     main(args.input_dir,
          args.output_dir,
+         args.keywords,
+         args.language,
+         args.target_audience,
          args.question,
          args.llm_model,
          args.embeddings_model,
