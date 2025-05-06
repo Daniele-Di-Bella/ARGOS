@@ -60,6 +60,7 @@ def sanitize_filename(question):
     sanitized_name = "".join(c if c.isalnum() or c in "_-" else "_" for c in question).strip()
     return sanitized_name + ".md"
 
+configfile: "config.yaml"
 
 keywords = config["keywords"]
 language = config["language"]
@@ -118,9 +119,9 @@ rule RAG:
             f'python scripts/RAG.py '
             f'--input_dir {{input.input_dir}} '
             f'--output_dir {{input.output_dir}} '
-            f'--keywords {{params.keywords}} '
-            f'--language {{params.language}} '
-            f'--target_audience {{params.target_audience}} '
+            f'--keywords "{params.keywords}" '
+            f'--language "{params.language}" '
+            f'--target_audience "{params.target_audience}" '
             f'--question "{params.question}" '
             f'--llm_model "{params.llm_model}" '
             f'--embeddings_model {{params.embeddings_model}} '
