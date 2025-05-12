@@ -1,9 +1,8 @@
-keywords: "TMEM138"
-question: "Write a text that explains what is TMEM138, to which genes it is related, which are its structure 
-and function (even if both supposed), where it is located in the cell and with which other proteins it interacts
-mostly."
+keywords: "pituitary_or_gonadal_reproductive_hormone_deficiency"
+question: "Compose a comprehensive, evidence‐based overview that examines how aromatase inhibitors influence puberty."
 model: "gpt-4.1"
 vector_store_type: "FAISS"  # InMemory or FAISS
 k_chunks: 50  # An int shall be passed
 language: "English"
-target_audience: "Wikipedia users interested in biology, with or without background in life sciences"
+target_audience: "Patients with pituitary or gonadal reproductive hormone deficiencies seeking a deeper understanding of
+their condition, as well as physicians aiming to expand their knowledge in order to provide optimal care."

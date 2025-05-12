@@ -106,7 +106,6 @@ def save_response_to_file(output_dir, question, answer, retrieved_docs: list):
 
 def main(input_dir,
          output_dir,
-         keywords,
          language,
          target_audience,
          question,
@@ -142,7 +141,7 @@ def main(input_dir,
 
     vector_store.add_documents(documents=all_splits)
 
-    prompt = hub.pull("tdark-proteins")
+    prompt = hub.pull("sod-italia-lay-versions")
 
     class State(TypedDict):
         question: str
@@ -167,7 +166,7 @@ def main(input_dir,
         docs_content = "\n\n".join(
             f"source: {doc.metadata['source']}\nchunk: {doc.page_content}" for doc in state["context"])
         message_for_llm = prompt.invoke(
-            {"keywords": keywords,
+            {"question": question,
              "language": language,
              "target_audience": target_audience,
              "context": docs_content})
@@ -194,7 +193,6 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Generates a Wikipedia page from documents in a folder")
     parser.add_argument("--input_dir", required=True, help="Path to the folder containing documents")
     parser.add_argument("--output_dir", required=True, help="Path to the output folder")
-    parser.add_argument("--keywords", required=True, help="Keywords parameter for prompt formation")
     parser.add_argument("--language", required=True, help="Language parameter for prompt formation")
     parser.add_argument("--target_audience", required=True, help="Target audience parameter to the output folder")
     parser.add_argument("--question", required=True, help="Question that the RAG system has to answer")
@@ -207,7 +205,6 @@ if __name__ == "__main__":
 
     main(args.input_dir,
          args.output_dir,
-         args.keywords,
          args.language,
          args.target_audience,
          args.question,

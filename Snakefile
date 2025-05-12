@@ -103,7 +103,6 @@ rule RAG:
     input:
         input_dir=f"data/{keywords}/",  # Path to the folder containing the documents
     params:
-        keywords=keywords,
         language=language,
         target_audience=target_audience,
         question=question,  # The question to be answered
@@ -117,8 +116,7 @@ rule RAG:
         command = (
             f'python scripts/RAG.py '
             f'--input_dir {{input.input_dir}} '
-            f'--output_dir outputs/"{params.keywords}" '  
-            f'--keywords "{params.keywords}" '
+            f'--output_dir outputs/"{keywords}" '  
             f'--language "{params.language}" '
             f'--target_audience "{params.target_audience}" '
             f'--question "{params.question}" '
