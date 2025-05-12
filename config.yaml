@@ -1,5 +1,17 @@
 keywords: "pituitary_or_gonadal_reproductive_hormone_deficiency"
-question: "Compose a comprehensive, evidence‐based overview that examines how aromatase inhibitors influence puberty."
+question: "Compose a comprehensive, evidence‐based overview that:
+1. Describes the normal physiology of puberty.
+2. Defines “mini-puberty,” outlining its characteristic features and clinical consequences.
+3. Details disorders of sex development (DSDs), their key features, implications and their relationship with gonadotropin deficiency.
+4. Explains the role of hormone-replacement therapy during puberty.
+5. Examines how aromatase inhibitors influence puberty.
+6. Summarizes protocols for biochemical hormonal assessment.
+7. Discusses essential considerations in puberty induction, including:
+  - Psychological function and social development
+  - Informing the child
+  - Gender development
+  - Transition
+"
 model: "gpt-4.1"
 vector_store_type: "FAISS"  # InMemory or FAISS
 k_chunks: 50  # An int shall be passed

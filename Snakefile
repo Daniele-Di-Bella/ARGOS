@@ -127,7 +127,7 @@ rule RAG:
         )
         shell(command)
 
-        assert os.path.exists(f"outputs/{params.keywords}"), f"Output file outputs/{params.keywords} was not created!"
+        assert os.path.exists(f"outputs/{keywords}"), f"Output file outputs/{keywords} was not created!"
 
 
 rule evaluation:
