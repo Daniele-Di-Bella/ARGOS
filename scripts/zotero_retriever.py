@@ -155,6 +155,9 @@ def copy_zotero_files(
             print(f'Subdirectory not found: {subdir_path}')
             parentItem = library.item(subdir[0]).get("data", {}).get("parentItem", 0)
             numChildren = library.item(subdir[0]).get("meta", {}).get("numChildren", 0)
+
+            childItem = None
+
             if numChildren:
                 childItem = library.children(subdir[0])[0].get("key", {})
             if parentItem:

@@ -101,7 +101,7 @@ rule zotero_retrieval:
 
 rule RAG:
     input:
-        input_dir=f"data/{keywords}/",  # Path to the folder containing the documents
+        input_dir=directory(f"data/{keywords}/")  # Path to the folder containing the documents
     params:
         language=language,
         target_audience=target_audience,
@@ -116,7 +116,7 @@ rule RAG:
         command = (
             f'python scripts/RAG.py '
             f'--input_dir {{input.input_dir}} '
-            f'--output_dir outputs/"{keywords}" '  
+            f'--output_dir outputs/{keywords} '  
             f'--language "{params.language}" '
             f'--target_audience "{params.target_audience}" '
             f'--question "{params.question}" '

@@ -55,17 +55,33 @@ os.environ["LANGCHAIN_PROJECT"] = LANGCHAIN_PROJECT
 
 
 def load_documents_from_folder(folder_path: str):
+    # Map each supported ext to its loader class
+    LOADERS = {
+        '.pdf': PyPDFLoader,
+        '.html': UnstructuredHTMLLoader,
+        # '.txt': TextLoader,
+        # '.md': UnstructuredMarkdownLoader,
+    }
+
     documents = []
+
     for filename in os.listdir(folder_path):
+        # Split into (root, ext); ext comes with the leading dot
+        _, ext = os.path.splitext(filename)
+        ext = ext.lower()
+
+        # Only process if we have a loader for this extension
+        LoaderClass = LOADERS.get(ext)
+        if LoaderClass is None:
+            print(f"Skipping unsupported file: {filename}")
+            continue
+
+        # Instantiate loader and load
         file_path = os.path.join(folder_path, filename)
-        if filename.endswith('.pdf'):
-            loader = PyPDFLoader(file_path)
-            documents.extend(loader.load())
-        elif filename.endswith('.html'):
-            loader = UnstructuredHTMLLoader(file_path)
-            documents.extend(loader.load())
-        else:
-            print(f"Unsupported format: {filename}")
+        loader = LoaderClass(file_path)
+        docs = loader.load()
+        documents.extend(docs)
+
     return documents
 
 
@@ -141,7 +157,9 @@ def main(input_dir,
 
     vector_store.add_documents(documents=all_splits)
 
-    prompt = hub.pull("sod-italia-lay-versions")
+    generation_prompt = hub.pull("tdark-proteins")
+    proofreading_prompt = hub.pull("tdark-proteins")
+
 
     class State(TypedDict):
         question: str
@@ -155,7 +173,7 @@ def main(input_dir,
 
         if vector_store_type == "FAISS":
             retriever = vector_store.as_retriever(search_type="similarity_score_threshold",
-                                                  search_kwargs={"score_threshold": 0.0,
+                                                  search_kwargs={"score_threshold": 0.0,  # cosine value
                                                                  "k": k_chunks})
             retrieved_docs = retriever.invoke(state["question"])
 
@@ -165,16 +183,25 @@ def main(input_dir,
     def generate(state: State):
         docs_content = "\n\n".join(
             f"source: {doc.metadata['source']}\nchunk: {doc.page_content}" for doc in state["context"])
-        message_for_llm = prompt.invoke(
+        message_for_llm = generation_prompt.invoke(
             {"question": question,
              "language": language,
              "target_audience": target_audience,
              "context": docs_content})
         response = llm.invoke(message_for_llm)
-        file_path = save_response_to_file(output_dir, state["question"], response.content, state["context"])
-        return {"answer": response.content, "output_path": file_path}
+        return {"answer": response.content}
 
-    graph_builder = StateGraph(State).add_sequence([retrieve, generate])
+    def proofread(state: State):
+        message_for_llm = proofreading_prompt.invoke(
+            {"question": question,
+             "language": language,
+             "target_audience": target_audience,
+             "text": state["answer"]})
+        proofread_text = llm.invoke(message_for_llm)
+        file_path = save_response_to_file(output_dir, state["question"], proofread_text.content, state["context"])
+        return {"proofread_text": proofread_text.content, "output_path": file_path}
+
+    graph_builder = StateGraph(State).add_sequence([retrieve, generate, proofread])
     graph_builder.add_edge(START, "retrieve")
     graph = graph_builder.compile()
 

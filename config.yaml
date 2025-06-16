@@ -1,20 +1,9 @@
-keywords: "pituitary_or_gonadal_reproductive_hormone_deficiency"
-question: "Compose a comprehensive, evidence‐based overview that:
-1. Describes the normal physiology of puberty.
-2. Defines “mini-puberty,” outlining its characteristic features and clinical consequences.
-3. Details disorders of sex development (DSDs), their key features, implications and their relationship with gonadotropin deficiency.
-4. Explains the role of hormone-replacement therapy during puberty.
-5. Examines how aromatase inhibitors influence puberty.
-6. Summarizes protocols for biochemical hormonal assessment.
-7. Discusses essential considerations in puberty induction, including:
-  - Psychological function and social development
-  - Informing the child
-  - Gender development
-  - Transition
-"
+keywords: phytoplankton
+question: "Compose a comprehensive, evidence‐based overview that discusses the influences of glacial rock 
+flour on phytoplankton communities"
 model: "gpt-4.1"
 vector_store_type: "FAISS"  # InMemory or FAISS
 k_chunks: 50  # An int shall be passed
 language: "English"
-target_audience: "Patients with pituitary or gonadal reproductive hormone deficiencies seeking a deeper understanding of
-their condition, as well as physicians aiming to expand their knowledge in order to provide optimal care."
+target_audience: "Biologists and glaciologists in search of a review that explains the relationships between Greenlandic 
+glacial rock flour and phytoplankton communities"
