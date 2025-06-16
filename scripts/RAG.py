@@ -158,7 +158,7 @@ def main(input_dir,
     vector_store.add_documents(documents=all_splits)
 
     generation_prompt = hub.pull("tdark-proteins")
-    proofreading_prompt = hub.pull("tdark-proteins")
+    proofreading_prompt = hub.pull("proofreading-tdark-proteins")
 
 
     class State(TypedDict):
@@ -193,8 +193,7 @@ def main(input_dir,
 
     def proofread(state: State):
         message_for_llm = proofreading_prompt.invoke(
-            {"question": question,
-             "language": language,
+            {"language": language,
              "target_audience": target_audience,
              "text": state["answer"]})
         proofread_text = llm.invoke(message_for_llm)
