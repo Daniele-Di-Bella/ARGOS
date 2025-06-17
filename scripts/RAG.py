@@ -165,6 +165,9 @@ def main(input_dir,
         question: str
         context: list[Document]
         answer: str
+        # In the case of adding new passages, to facilitate automatic updating of State values, one can
+        # follow two strategies: (1) new keys are added to the TypeDict, (2) dictionary unpacking (**) can be used,
+        # which seems to me to be more flexible in the case of further additions.
 
     def retrieve(state: State):
         if vector_store_type == "InMemory":

@@ -1,9 +1,9 @@
 keywords: gelsolin
-question: "2-Write a text that explains what gelsolin is, to which genes it is related, which are its structure and function 
+question: "1-Write a text that explains what gelsolin is, to which genes it is related, which are its structure and function 
 (even if both supposed), where it is located in the cell and with which other proteins it interacts mostly."
 model: "gpt-4.1"
 vector_store_type: "FAISS"  # InMemory or FAISS
 k_chunks: 50  # An int shall be passed
-language: "Italian"
+language: "English"
 target_audience: "General public in search of accurate information on gelsolin; patients which diseases are connected
 to such molecules who want to understand more about their condition."
