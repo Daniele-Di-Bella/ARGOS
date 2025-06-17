@@ -189,7 +189,7 @@ def main(input_dir,
              "target_audience": target_audience,
              "context": docs_content})
         response = llm.invoke(message_for_llm)
-        return {"answer": response.content}
+        return {**state, "answer": response.content}
 
     def proofread(state: State):
         message_for_llm = proofreading_prompt.invoke(
@@ -198,7 +198,7 @@ def main(input_dir,
              "text": state["answer"]})
         proofread_text = llm.invoke(message_for_llm)
         file_path = save_response_to_file(output_dir, state["question"], proofread_text.content, state["context"])
-        return {"proofread_text": proofread_text.content, "output_path": file_path}
+        return {**state, "proofread_text": proofread_text.content, "output_path": file_path}
 
     graph_builder = StateGraph(State).add_sequence([retrieve, generate, proofread])
     graph_builder.add_edge(START, "retrieve")
