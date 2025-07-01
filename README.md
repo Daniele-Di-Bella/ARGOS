@@ -82,10 +82,14 @@ Replace `N` with the number of available cores and `rule` with the step of the p
 
 ## Output Structure
 Retrieved documents: `data/{keywords}/`
+
 Generated answer: `outputs/{keywords}/{question}.md`
+
 Evaluation report: `outputs/{keywords}/{question}[Eval].md`
+
 Optional metrics: CSV file in the same output directory
 
 ## License & Contact
 License: MIT
+
 Author: Daniele Di Bella (daniele.dibella99@gmail.com)
