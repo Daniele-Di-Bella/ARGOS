@@ -1,7 +1,7 @@
 # 🐕 ARGOS: A Retrieval-augmented GeneratiOn approach for Scientific communication
 
 ## 🖼️ Overview
-**ARGOS** is a modular Snakemake workflow implementing a Retrieval-Augmented Generation (RAG) pipeline using documents retrieved from a local Zotero library. It automates: 
+**ARGOS** is a modular Snakemake workflow implementing a Retrieval-Augmented Generation (RAG) pipeline using documents retrieved from a local Zotero library. It was created in the [Roversi lab](https://ibba.cnr.it/staff/pietro-roversi/), and automates: 
 1. **Document Retrieval** from Zotero using its API.
 2. **Answer Generation** and **Answer Proofreading** employing an LLM. The model now in use is OpenAI's GPT-4.1. 
 3. **Evaluation** of the generated answer versus a reference. This function was added for initial tests of the app. 
